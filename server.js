@@ -310,6 +310,11 @@ async function handleApi(req, res, url) {
 }
 
 async function handleStatic(res, url) {
+  if (url.pathname === "/favicon.ico") {
+    sendText(res, 204, "", "image/x-icon");
+    return;
+  }
+
   if (url.pathname !== "/" && url.pathname !== "/index.html") {
     sendText(res, 404, "Not Found", "text/plain; charset=utf-8");
     return;
