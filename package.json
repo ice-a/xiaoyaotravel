@@ -1,0 +1,17 @@
+{
+  "name": "travel-guide-generator",
+  "version": "1.0.0",
+  "private": true,
+  "description": "地点 + 天数生成旅游攻略，并缓存到 MongoDB。",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "mongodb": "^6.17.0"
+  }
+}

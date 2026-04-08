@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>旅伴手册 3.1</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin />
+  <style>
+    :root{--bg:#f2ece1;--ink:#172328;--muted:#5f7178;--line:rgba(23,35,40,.14);--panel:rgba(255,250,243,.84);--accent:#0f6f6a;--accent2:#c56542;--shadow:0 20px 46px rgba(18,30,35,.14)}
+    *{box-sizing:border-box} body{margin:0;color:var(--ink);font-family:"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;background:radial-gradient(circle at 0 -10%,rgba(197,101,66,.2),transparent 33%),radial-gradient(circle at 100% 0,rgba(15,111,106,.2),transparent 30%),linear-gradient(180deg,#faf6ef 0,var(--bg) 100%);height:100vh;overflow:hidden}
+    .app{width:min(1320px,calc(100% - 24px));height:calc(100vh - 24px);margin:12px auto;display:grid;gap:10px}
+    .nav{border:1px solid rgba(255,255,255,.72);border-radius:18px;background:rgba(254,248,239,.84);box-shadow:var(--shadow);backdrop-filter:blur(12px);padding:10px;display:grid;gap:8px;transition:transform .25s ease,opacity .25s ease}
+    .nav.hidden{transform:translateY(-120%);opacity:0;pointer-events:none}
+    .top{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+    .brand{display:inline-flex;align-items:center;gap:10px;font-weight:800}.dot{width:10px;height:10px;border-radius:50%;background:var(--accent2);box-shadow:0 0 0 7px rgba(197,101,66,.15)}
+    .chips{display:flex;gap:8px;flex-wrap:wrap}.chip{font-size:12px;font-weight:700;border:1px solid rgba(15,111,106,.2);border-radius:999px;background:#fff;color:#1b5a5d;padding:4px 9px}
+    .hnav{border:1px solid rgba(23,35,40,.1);border-radius:13px;background:rgba(255,255,255,.76);padding:8px;display:grid;gap:8px}
+    .hnav.collapsed .strip{display:none}
+    .hbar{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center}
+    .input{border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);font:inherit;padding:8px 10px;width:100%}
+    .count{font-size:12px;color:var(--muted);font-weight:700;white-space:nowrap}
+    .btn{border:none;border-radius:999px;padding:9px 13px;font-size:14px;font-weight:700;cursor:pointer}
+    .btn.s{background:#fff;border:1px solid rgba(23,35,40,.14)} .btn.p{color:#fff;background:linear-gradient(145deg,#1a2a31,#33474f)}
+    .toggle{border:1px solid rgba(23,35,40,.14);border-radius:999px;padding:4px 10px;font-size:12px;font-weight:700;background:#fff;cursor:pointer}
+    .strip{display:flex;gap:8px;overflow:auto;padding-bottom:2px}
+    .item{min-width:230px;max-width:260px;flex:0 0 auto;border:1px solid rgba(23,35,40,.1);border-radius:12px;background:#fff;padding:8px;display:grid;gap:4px;cursor:pointer}
+    .item.active{border-color:rgba(15,111,106,.5)} .ihead{display:flex;justify-content:space-between;gap:8px;align-items:center}
+    .ikey{font-size:13px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .idel{border:1px solid rgba(178,55,25,.3);border-radius:999px;padding:3px 8px;font-size:11px;font-weight:700;color:#9b3219;background:rgba(178,55,25,.08);cursor:pointer}
+    .isub{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .work{display:grid;grid-template-columns:minmax(340px,400px) minmax(0,1fr);gap:10px;min-height:0}
+    .left{display:grid;gap:10px;min-height:0}
+    .card{border:1px solid rgba(255,255,255,.72);border-radius:18px;background:var(--panel);box-shadow:var(--shadow);backdrop-filter:blur(12px)}
+    .form{padding:12px;display:grid;gap:8px}.help,.sub{margin:0;color:var(--muted);font-size:13px;line-height:1.6}
+    .fg{display:grid;gap:8px} label{display:grid;gap:6px;font-size:14px;font-weight:600}
+    .btns{display:flex;gap:8px;flex-wrap:wrap} .status{min-height:20px;color:var(--muted);font-size:13px}.status.err{color:#b13518}
+    .mapc{padding:10px;display:grid;gap:8px}.mhead{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+    .map-wrap{position:relative}
+    #map{width:100%;height:360px;border:1px solid rgba(23,35,40,.12);border-radius:12px;background:#eef3ef}
+    .map-legend{position:absolute;top:10px;right:10px;z-index:500;padding:8px 10px;border:1px solid rgba(23,35,40,.14);border-radius:10px;background:rgba(255,255,255,.92);box-shadow:0 6px 16px rgba(23,35,40,.16);display:grid;gap:6px}
+    .map-legend.hidden{display:none}
+    .legend-row{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--ink);font-weight:700}
+    .legend-dot{width:10px;height:10px;border-radius:50%}
+    .scroll{min-height:0;overflow:auto;border:1px solid rgba(255,255,255,.72);border-radius:18px;background:rgba(255,250,243,.68);box-shadow:var(--shadow);padding:10px}
+    .guide{padding:10px;background:linear-gradient(160deg,rgba(255,255,255,.68),rgba(255,247,236,.8));border-radius:14px}
+    .shell{border:1px solid rgba(23,35,40,.08);border-radius:14px;padding:10px;background:var(--tplbg,#f7f4ec);display:grid;gap:8px}
+    .ban{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+    .badge{font-size:12px;font-weight:800;border:1px solid color-mix(in srgb,var(--tpla,#0f6f6a) 26%,#fff);border-radius:999px;color:var(--tpla,#0f6f6a);background:#fff;padding:5px 10px}
+    .layout{display:grid;gap:8px}.gcard{border:1px solid rgba(23,35,40,.08);border-radius:12px;background:rgba(255,255,255,.9);padding:10px}
+    .title{margin:7px 0 0;font-size:clamp(1.36rem,2.8vw,1.95rem);line-height:1.2}
+    .tags{display:flex;gap:7px;flex-wrap:wrap;margin-top:7px}
+    .tag{font-size:12px;font-weight:700;border:1px solid color-mix(in srgb,var(--tpla,#0f6f6a) 27%,#fff);border-radius:999px;color:color-mix(in srgb,var(--tpla,#0f6f6a) 75%,#0f2024);background:color-mix(in srgb,var(--tpla,#0f6f6a) 11%,#fff);padding:4px 9px}
+    .g2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:8px}
+    .mini{border:1px solid rgba(23,35,40,.08);border-radius:10px;background:rgba(255,255,255,.87);padding:9px}
+    .mini h4{margin:0;font-size:14px}.mini p,.mini li{margin:6px 0 0;color:var(--muted);font-size:13px;line-height:1.56}.mini ul{margin:6px 0 0;padding-left:18px}
+    .days{display:grid;gap:7px}.day{border:1px solid rgba(23,35,40,.08);border-radius:10px;background:rgba(255,255,255,.88);padding:9px;cursor:pointer}.day.active{border-color:rgba(15,111,106,.52);box-shadow:inset 0 0 0 1px rgba(15,111,106,.22)}.day h4{margin:0 0 6px;font-size:15px}
+    .sch{display:grid;gap:6px}.slot{display:grid;grid-template-columns:66px 1fr;gap:7px;border:1px solid rgba(23,35,40,.06);border-radius:9px;background:rgba(244,238,227,.74);padding:6px 8px;font-size:13px}
+    .bud{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.bud strong{display:block;margin-top:5px;font-size:1.05rem}
+    .reveal{opacity:0;transform:translateY(14px);transition:opacity .5s ease,transform .5s ease;transition-delay:var(--d,0ms)}.reveal.on{opacity:1;transform:translateY(0)}
+    .empty{padding:26px;text-align:center}
+    .tpl-1{--tpla:#0f6f6a;--tplbg:#f5f4eb}.tpl-2{--tpla:#034f85;--tplbg:#eef5fa}.tpl-3{--tpla:#4f4da8;--tplbg:#f5f1fb}.tpl-4{--tpla:#146a5e;--tplbg:#f0f8f4}.tpl-5{--tpla:#724625;--tplbg:#faf2ea}.tpl-6{--tpla:#24518a;--tplbg:#eef7fa}.tpl-7{--tpla:#6e3d80;--tplbg:#f7f0f7}.tpl-8{--tpla:#045f6e;--tplbg:#f1f8f7}.tpl-9{--tpla:#205b4f;--tplbg:#f2f8f1}.tpl-10{--tpla:#2f4b78;--tplbg:#f2f5fa}
+    .split .layout{grid-template-columns:1.06fr .94fr}.split .layout>.gcard:first-child{grid-column:1/-1}
+    .mag .layout{grid-template-columns:.94fr 1.06fr}.mag .layout>.gcard:nth-child(2){grid-column:2;grid-row:1/span 2}.mag .layout>.gcard:nth-child(1){grid-column:1;grid-row:1}.mag .layout>.gcard:nth-child(3){grid-column:1;grid-row:2}
+    .cards .days{grid-template-columns:repeat(2,minmax(0,1fr))}.timeline .day{border-left:4px solid color-mix(in srgb,var(--tpla,#0f6f6a) 62%,#fff)}.compact .gcard{padding:9px}
+    @media (max-width:1100px){body{overflow:auto}.app{height:auto}.work{grid-template-columns:1fr}.scroll{min-height:440px;max-height:68vh}#map{height:300px}}
+    @media (max-width:840px){.hbar{grid-template-columns:1fr auto}.count{grid-column:1/-1}.g2,.bud,.split .layout,.mag .layout,.cards .days{grid-template-columns:1fr}.mag .layout>.gcard:nth-child(2),.mag .layout>.gcard:nth-child(1),.mag .layout>.gcard:nth-child(3){grid-column:auto;grid-row:auto}.slot{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header id="nav" class="nav">
+      <div class="top">
+        <div class="brand"><span class="dot"></span><span>旅伴手册 3.1</span></div>
+        <div class="chips"><span class="chip">地图联动行程</span><span class="chip">动态路线渲染</span><span class="chip">1分钟无操作轮播</span></div>
+      </div>
+      <div id="hnav" class="hnav">
+        <div class="hbar">
+          <input id="hsearch" class="input" placeholder="按地点搜索历史（无需密码）" />
+          <div id="hcount" class="count">0 条</div>
+          <button id="htoggle" class="toggle" type="button">折叠历史</button>
+        </div>
+        <div id="hstrip" class="strip"></div>
+      </div>
+    </header>
+
+    <section class="work">
+      <aside class="left">
+        <section class="card form">
+          <h2 style="margin:0">生成旅游攻略</h2>
+          <p class="help">输入地点与天数，系统先查 Mongo 缓存，未命中才调用模型生成并保存。</p>
+          <form id="form" class="fg">
+            <label>旅游地点<input id="location" class="input" required placeholder="例如：东京、成都、桂林"></label>
+            <label>游玩天数
+              <select id="days" class="input">
+                <option value="1">1 天</option><option value="2" selected>2 天</option><option value="3">3 天</option><option value="4">4 天</option><option value="5">5 天</option><option value="6">6 天</option><option value="7">7 天</option>
+              </select>
+            </label>
+            <div class="btns"><button id="submit" class="btn p" type="submit">生成并保存</button><button id="refresh" class="btn s" type="button">刷新历史</button></div>
+          </form>
+          <div id="status" class="status"></div>
+          <p class="help">删除历史需输入服务端配置的 <code>DELETE_PASSWORD</code>。</p>
+        </section>
+        <section class="card mapc">
+          <div class="mhead"><h3 style="margin:0">路线地图（Leaflet）</h3><button id="mlocate" class="btn s" type="button">定位当前攻略</button></div>
+          <p class="help">点击某一天行程后，将在地图上渲染当天路线。</p>
+          <div class="map-wrap">
+            <div id="map-legend" class="map-legend"></div>
+            <div id="map"></div>
+          </div>
+        </section>
+      </aside>
+
+      <div id="scroll" class="scroll">
+        <main id="root"><div class="empty"><h3>还没有选中攻略</h3><p class="sub">在顶部导航选择历史攻略，或先生成一个新的地点攻略。</p></div></main>
+      </div>
+    </section>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin></script>
+  <script>
+    const T={1:{n:"海湾清晨",s:"tpl-1 split"},2:{n:"城市博览",s:"tpl-2 mag"},3:{n:"霓虹夜行",s:"tpl-3 cards"},4:{n:"山林步调",s:"tpl-4 timeline"},5:{n:"复古街区",s:"tpl-5 compact"},6:{n:"海港漫游",s:"tpl-6 split"},7:{n:"艺文周末",s:"tpl-7 mag"},8:{n:"轻探险线",s:"tpl-8 cards"},9:{n:"自然疗愈",s:"tpl-9 timeline"},10:{n:"都市效率",s:"tpl-10 compact"}};
+    const hstrip=document.getElementById("hstrip"),hsearch=document.getElementById("hsearch"),hcount=document.getElementById("hcount"),htoggle=document.getElementById("htoggle"),hnav=document.getElementById("hnav"),nav=document.getElementById("nav"),root=document.getElementById("root"),scroll=document.getElementById("scroll"),statusEl=document.getElementById("status"),form=document.getElementById("form"),locationEl=document.getElementById("location"),daysEl=document.getElementById("days"),submit=document.getElementById("submit"),refresh=document.getElementById("refresh"),mlocate=document.getElementById("mlocate"),mapLegend=document.getElementById("map-legend");
+    const DAY_COLORS=["#0f6f6a","#c56542","#3d63a9","#8a4fb3","#2f8d92","#b04f6b","#5b7f2f"];
+    let items=[],activeKey="",q="",collapsed=false,autoTimer=null,autoIdx=0,lastTouch=Date.now(),map,centerMarker,currentRec=null,activeDayIdx=0,routeLine=null,routeMarkers=[],geoCache=new Map(),navHidden=false,lastTop=0;
+    const s=(m,e)=>{statusEl.textContent=m||"";statusEl.className=e?"status err":"status"},esc=v=>String(v??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;"),tid=v=>{const n=Number(v);return Number.isInteger(n)&&n>=1&&n<=10?n:1},li=a=>!Array.isArray(a)||!a.length?"<p class='sub'>暂无内容</p>":"<ul>"+a.map(x=>"<li>"+esc(x)+"</li>").join("")+"</ul>";
+    const hit=()=>{lastTouch=Date.now();if(navHidden){navHidden=false;nav.classList.remove("hidden")}},filtered=()=>{const k=q.trim().toLowerCase();if(!k)return items;return items.filter(i=>String(i.location||"").toLowerCase().includes(k)||String(i.key||"").toLowerCase().includes(k));},syncCollapse=()=>{hnav.classList.toggle("collapsed",collapsed);htoggle.textContent=collapsed?"展开历史":"折叠历史";};
+    function startAuto(){if(autoTimer)clearInterval(autoTimer);autoTimer=setInterval(()=>{if(collapsed)return;if(Date.now()-lastTouch<60000)return;const f=filtered();if(!f.length)return;autoIdx=(autoIdx+1)%f.length;const n=f[autoIdx];if(!n||n.key===activeKey)return;activeKey=n.key;renderHistory();renderGuide(n);},5000)}
+    function reveal(){const ns=[...document.querySelectorAll(".reveal")];ns.forEach((n,i)=>n.style.setProperty("--d",`${(i%8)*45}ms`));if(!("IntersectionObserver" in window)){ns.forEach(n=>n.classList.add("on"));return;}const ob=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add("on");ob.unobserve(e.target)}}),{threshold:.14});ns.forEach(n=>ob.observe(n))}
+    function empty(){root.className="";root.innerHTML="<div class='empty'><h3>还没有选中攻略</h3><p class='sub'>在顶部导航选择历史攻略，或先生成一个新的地点攻略。</p></div>";renderMapLegend(0);}
+    async function geo(name){if(!name)return null;const key=String(name).trim().toLowerCase();if(geoCache.has(key))return geoCache.get(key);const r=await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(name)}`,{headers:{"Accept-Language":"zh-CN"}});const d=await r.json().catch(()=>[]);if(!Array.isArray(d)||!d.length){geoCache.set(key,null);return null;}const lat=Number(d[0].lat),lon=Number(d[0].lon);if(!Number.isFinite(lat)||!Number.isFinite(lon)){geoCache.set(key,null);return null;}const p={lat,lon,label:d[0].display_name||name};geoCache.set(key,p);return p}
+    function clearRoute(){if(routeLine){map.removeLayer(routeLine);routeLine=null;}routeMarkers.forEach(m=>map.removeLayer(m));routeMarkers=[]}
+    function setDayActive(i){root.querySelectorAll(".day[data-day]").forEach(el=>el.classList.toggle("active",Number(el.dataset.day)===i))}
+    function renderMapLegend(dayCount){
+      const n=Math.min(Math.max(dayCount||0,0),DAY_COLORS.length);
+      if(!n){mapLegend.classList.add("hidden");mapLegend.innerHTML="";return;}
+      mapLegend.classList.remove("hidden");
+      mapLegend.innerHTML=Array.from({length:n}).map((_,i)=>`<div class="legend-row"><span class="legend-dot" style="background:${DAY_COLORS[i]}"></span><span>Day ${i+1}</span></div>`).join("");
+    }
+    async function focusMap(name){if(!map)return;const p=name?await geo(name):null;const lat=p?.lat??34.3,lon=p?.lon??108.9;map.flyTo([lat,lon],p?11:4,{duration:1.1});if(!centerMarker)centerMarker=L.marker([lat,lon]).addTo(map);else centerMarker.setLatLng([lat,lon]);if(name)centerMarker.bindPopup(esc(name));}
+    async function drawDayRoute(i){if(!currentRec||!map)return;const day=(currentRec.content?.itinerary||[])[i];if(!day)return;activeDayIdx=i;setDayActive(i);const raws=[day.morning,day.afternoon,day.evening].filter(Boolean);const city=currentRec.location||"";if(!raws.length){await focusMap(city);return;}const center=(await geo(city))||{lat:34.3,lon:108.9};const pts=[];for(let idx=0;idx<raws.length;idx+=1){const text=raws[idx];const p=await geo(`${city} ${text}`.trim());if(p){pts.push({...p,step:text});continue;}let h=0;const seed=`${city}|${i}|${idx}|${text}`;for(let j=0;j<seed.length;j+=1)h=(h*33+seed.charCodeAt(j))>>>0;const ang=(h%360)*(Math.PI/180),radius=0.012+((h%7)*0.004);pts.push({lat:center.lat+Math.sin(ang)*radius,lon:center.lon+Math.cos(ang)*radius,step:text});}if(!pts.length){await focusMap(city);return;}const routeColor=DAY_COLORS[i%DAY_COLORS.length];clearRoute();pts.forEach((p,idx)=>{const icon=L.divIcon({className:"day-pin",html:`<span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:999px;background:${routeColor};color:#fff;font-size:11px;font-weight:800;border:2px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.18)">${idx+1}</span>`,iconSize:[22,22],iconAnchor:[11,11]});const m=L.marker([p.lat,p.lon],{icon}).addTo(map);m.bindPopup(`<b style="color:${routeColor}">Day ${i+1}</b><br>${idx+1}. ${esc(p.step)}`);routeMarkers.push(m)});if(pts.length>1)routeLine=L.polyline(pts.map(p=>[p.lat,p.lon]),{color:routeColor,weight:4,opacity:.86}).addTo(map);map.fitBounds(L.latLngBounds(pts.map(p=>[p.lat,p.lon])).pad(0.25),{animate:true,duration:1.0});routeMarkers[0]?.openPopup()}
+    function renderHistory(){if(!items.length){hcount.textContent="0 条";hstrip.innerHTML="<div class='sub'>暂无历史攻略，先生成一条吧。</div>";return;}const f=filtered();hcount.textContent=`${f.length} 条`;if(!f.length){hstrip.innerHTML="<div class='sub'>没有匹配到历史攻略。</div>";return;}autoIdx=Math.max(0,f.findIndex(i=>i.key===activeKey));hstrip.innerHTML=f.map(i=>{const a=i.key===activeKey?" active":"",t=tid(i.templateId),tm=T[t].n,time=i.updatedAt?new Date(i.updatedAt).toLocaleString("zh-CN"):"未知时间";return `<article class="item${a}" data-key="${esc(i.key)}"><div class="ihead"><div class="ikey">${esc(i.key)}</div><button class="idel" data-del="${esc(i.key)}" type="button">删除</button></div><div class="isub">${esc(i.location||"未知地点")} · ${esc(String(i.days||"-"))} 天</div><div class="isub">模板 ${t} · ${esc(tm)}</div><div class="isub">${esc(time)}</div></article>`}).join("");hstrip.querySelectorAll(".item").forEach(n=>{n.addEventListener("click",()=>{hit();const m=items.find(i=>i.key===n.dataset.key);if(!m)return;activeKey=m.key;renderHistory();renderGuide(m)});n.addEventListener("mouseenter",hit)});hstrip.querySelectorAll(".idel").forEach(b=>b.addEventListener("click",e=>{e.stopPropagation();const k=b.dataset.del||"";if(k)delHistory(k)}))}
+    function renderGuide(rec){if(!rec||!rec.content){empty();return;}currentRec=rec;activeDayIdx=0;const c=rec.content,it=Array.isArray(c.itinerary)?c.itinerary:[],b=c.budget||{},tags=Array.isArray(c.tags)?c.tags:[],t=tid(rec.templateId),cfg=T[t],cache=rec.source==="cache";root.className=cfg.s;root.innerHTML=`<div class="guide"><div class="shell"><div class="ban reveal"><span class="badge">模板 ${t} · ${esc(cfg.n)}</span><span class="badge">${cache?"缓存命中":"新生成并入库"}</span></div><div class="layout"><section class="gcard reveal"><div class="tags"><span class="tag">${esc(rec.key)}</span><span class="tag">${esc(c.bestSeason||"四季皆宜")}</span><span class="tag">${esc(c.travelStyle||"自由行")}</span></div><h2 class="title">${esc(c.title||(rec.key+"旅游攻略"))}</h2><p class="sub">${esc(c.summary||"已生成旅游攻略。")}</p><div class="g2"><article class="mini reveal"><h4>出发前提醒</h4><p>${esc(c.prep||"建议提前确认天气、交通和预约信息。")}</p></article><article class="mini reveal"><h4>适合人群</h4><p>${esc(c.audience||"适合第一次去、想快速安排行程的人群。")}</p></article></div><div class="tags">${tags.length?tags.map(x=>`<span class="tag">${esc(x)}</span>`).join(""):"<span class='sub'>暂无标签</span>"}</div></section><section class="gcard reveal"><h3 style="margin:0 0 8px;">每日行程（点击某一天联动地图）</h3><div class="days">${it.map((d,i)=>`<article class="day reveal" data-day="${i}"><h4>Day ${i+1} · ${esc(d.theme||"行程安排")}</h4><div class="sch">${["morning","afternoon","evening"].map(k=>`<div class="slot"><strong>${k==="morning"?"上午":k==="afternoon"?"下午":"晚上"}</strong><div>${esc(d[k]||"自由活动")}</div></div>`).join("")}</div></article>`).join("")||"<div class='sub'>暂无详细行程</div>"}</div></section><section class="gcard reveal"><h3 style="margin:0 0 8px;">预算与建议</h3><div class="bud"><article class="mini reveal"><h4>交通</h4><strong>${esc(b.transport||"-")}</strong></article><article class="mini reveal"><h4>住宿</h4><strong>${esc(b.hotel||"-")}</strong></article><article class="mini reveal"><h4>餐饮</h4><strong>${esc(b.food||"-")}</strong></article><article class="mini reveal"><h4>门票与杂费</h4><strong>${esc(b.misc||"-")}</strong></article></div><div class="g2"><article class="mini reveal"><h4>必吃推荐</h4>${li(c.foods)}</article><article class="mini reveal"><h4>住宿建议</h4>${li(c.hotels)}</article><article class="mini reveal"><h4>贴士</h4>${li(c.tips)}</article></div></section></div></div></div>`;reveal();renderMapLegend(it.length||3);root.querySelectorAll(".day[data-day]").forEach(el=>el.addEventListener("click",()=>{hit();const idx=Number(el.dataset.day);if(Number.isInteger(idx))drawDayRoute(idx)}));if(it.length)drawDayRoute(0);else focusMap(rec.location||"")}
+    async function j(url,opt){const r=await fetch(url,opt);const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||"请求失败");return d}
+    async function load(){try{s("正在读取 MongoDB 历史...");const d=await j("/api/guides");items=Array.isArray(d.items)?d.items:[];items.sort((a,b)=>new Date(b.updatedAt)-new Date(a.updatedAt));if(!activeKey&&items.length)activeKey=items[0].key;const a=items.find(i=>i.key===activeKey);if(a)renderGuide(a);else empty();renderHistory();s(items.length?"历史已同步。":"暂无历史攻略。")}catch(e){console.error(e);s(e.message||"读取历史失败",1)}}
+    async function delHistory(k){hit();const pwd=window.prompt("请输入删除密码（DELETE_PASSWORD）");if(pwd===null)return;try{s("正在删除...");const r=await j(`/api/guides/${encodeURIComponent(k)}`,{method:"DELETE",headers:{"Content-Type":"application/json"},body:JSON.stringify({password:pwd})});if(!r.deleted){s("未找到可删除记录。",1);await load();return;}items=items.filter(i=>i.key!==k);if(activeKey===k){const f=filtered()[0]||items[0];activeKey=f?f.key:"";if(f)renderGuide(f);else empty();}renderHistory();s("删除成功。")}catch(e){console.error(e);s(e.message||"删除失败",1)}}
+    async function submitGuide(ev){ev.preventDefault();hit();const location=locationEl.value.trim(),days=Number(daysEl.value);if(!location){s("请先输入旅游地点。",1);locationEl.focus();return;}submit.disabled=true;s("正在生成攻略，命中缓存会直接返回...");try{const d=await j("/api/guides",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({location,days})});const rec=d.item;activeKey=rec.key;const idx=items.findIndex(i=>i.key===rec.key);if(idx>=0)items.splice(idx,1,rec);else items.unshift(rec);items.sort((a,b)=>new Date(b.updatedAt)-new Date(a.updatedAt));renderHistory();renderGuide(rec);s(d.cached?`命中缓存，沿用模板 ${tid(rec.templateId)}。`:`已生成并入库，随机模板 ${tid(rec.templateId)} 已固定。`)}catch(e){console.error(e);s(e.message||"生成失败",1)}finally{submit.disabled=false}}
+    function initMap(){map=L.map("map",{zoomControl:true}).setView([34.3,108.9],4);L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:"&copy; OpenStreetMap contributors"}).addTo(map);setTimeout(()=>map.invalidateSize(),120);}
+    function bindRightScrollHideTop(){scroll.addEventListener("scroll",()=>{const t=scroll.scrollTop,down=t>lastTop,far=t>36;if(down&&far){navHidden=true;nav.classList.add("hidden")}else{navHidden=false;nav.classList.remove("hidden")}lastTop=t;},{passive:true})}
+    form.addEventListener("submit",submitGuide);refresh.addEventListener("click",()=>{hit();load()});hsearch.addEventListener("input",()=>{hit();q=hsearch.value||"";renderHistory()});htoggle.addEventListener("click",()=>{hit();collapsed=!collapsed;syncCollapse()});mlocate.addEventListener("click",()=>{hit();if(currentRec?.location)focusMap(currentRec.location)});document.addEventListener("visibilitychange",()=>{if(!document.hidden)hit()});
+    initMap();bindRightScrollHideTop();syncCollapse();startAuto();load();
+  </script>
+</body>
+</html>
