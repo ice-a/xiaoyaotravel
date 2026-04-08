@@ -38,6 +38,20 @@ function sendText(res, statusCode, payload, contentType) {
   res.end(payload);
 }
 
+function toErrorMessage(error) {
+  if (!error) return "Unknown error";
+  const message = error.message || String(error);
+  const cause = error.cause;
+  if (!cause || typeof cause !== "object") return message;
+
+  const details = [];
+  if (cause.code) details.push(`code=${cause.code}`);
+  if (cause.errno) details.push(`errno=${cause.errno}`);
+  if (cause.address) details.push(`address=${cause.address}`);
+  if (cause.port) details.push(`port=${cause.port}`);
+  return details.length ? `${message} (${details.join(", ")})` : message;
+}
+
 function buildKey(location, days) {
   return `${location}-${days}天`;
 }
@@ -159,21 +173,26 @@ async function generateGuide(location, days) {
     "itinerary 数量必须与天数一致，预算建议请给出人民币区间。"
   ].join("\n");
 
-  const response = await fetch(`${baseUrl}/chat/completions`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${apiKey}`
-    },
-    body: JSON.stringify({
-      model: modelName,
-      temperature: 0.7,
-      messages: [
-        { role: "system", content: "你是严谨的旅行攻略生成助手，只返回合法 JSON。" },
-        { role: "user", content: prompt }
-      ]
-    })
-  });
+    let response;
+  try {
+    response = await fetch(`${baseUrl}/chat/completions`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({
+        model: modelName,
+        temperature: 0.7,
+        messages: [
+          { role: "system", content: "You are a travel planner. Return strict JSON only." },
+          { role: "user", content: prompt }
+        ]
+      })
+    });
+  } catch (error) {
+    throw new Error(`Failed to reach model API (${baseUrl}/chat/completions). Check baseurl/apikey/modelname and outbound network. ${toErrorMessage(error)}`);
+  }
 
   const result = await response.json().catch(() => ({}));
   if (!response.ok) {
@@ -334,8 +353,9 @@ const server = http.createServer(async (req, res) => {
     }
     await handleStatic(res, url);
   } catch (error) {
-    console.error(error);
-    sendJson(res, 500, { error: error.message || "Internal server error." });
+    const message = toErrorMessage(error);
+    console.error("[server-error]", message, error);
+    sendJson(res, 500, { error: message || "Internal server error." });
   }
 });
 
