@@ -104,3 +104,49 @@ npm start
   "updatedAt": "2026-04-08T00:00:00.000Z"
 }
 ```
+
+## 部署说明（Vercel / Cloudflare）
+
+### 部署前环境变量
+
+在部署平台中先配置以下变量：
+
+- `MONGODB_URI`
+- `MONGODB_DB`
+- `MONGODB_COLLECTION`
+- `baseurl`
+- `apikey`
+- `modelname`
+- `DELETE_PASSWORD`
+
+### 方案 A：部署到 Vercel（推荐）
+
+1. 将项目推送到 GitHub。
+2. 打开 Vercel，点击 `Add New -> Project`，导入该仓库。
+3. Framework Preset 选择 `Other`。
+4. 按上面清单添加环境变量。
+5. 点击部署。
+
+如果你希望所有路由都由 `server.js` 处理，可以在项目根目录新增 `vercel.json`：
+
+```json
+{
+  "version": 2,
+  "builds": [
+    { "src": "server.js", "use": "@vercel/node" }
+  ],
+  "routes": [
+    { "src": "/(.*)", "dest": "server.js" }
+  ]
+}
+```
+
+### 方案 B：部署到 Cloudflare
+
+当前项目是 Node.js 原生 HTTP 服务（`node:http`），并使用了 MongoDB Node 驱动。
+这套实现不能直接运行在 Cloudflare Workers 运行时，通常需要改造后再上云。
+
+可行做法：
+
+1. 保持应用部署在 Vercel，域名接入 Cloudflare（DNS/代理）。
+2. 将后端改造成 Workers 兼容方案（例如 Hono + fetch 风格的数据访问），再部署到 Cloudflare Workers/Pages。
