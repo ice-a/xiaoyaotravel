@@ -10,6 +10,10 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
   <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
   <script defer src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+  <script type="module">
+    import { inject } from "/assets/vercel-analytics.mjs";
+    inject();
+  </script>
   <style>
     :root {
       --bg:#f2efe8;

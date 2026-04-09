@@ -11,6 +11,7 @@ dotenv.config();
 const PORT = Number(process.env.PORT || 3000);
 const ROOT = __dirname;
 const INDEX_FILE = path.join(ROOT, "index.html");
+const VERCEL_ANALYTICS_FILE = path.join(ROOT, "node_modules", "@vercel", "analytics", "dist", "index.mjs");
 const TEMPLATE_COUNT = 10;
 
 const POSTGRES_URL = readEnv(["POSTGRES_URL", "DATABASE_URL", "NEON_DATABASE_URL", "postgres_url", "database_url"]);
@@ -594,6 +595,11 @@ async function handleApi(req, res, url) {
 async function handleStatic(res, url) {
   if (url.pathname === "/favicon.ico") {
     sendText(res, 204, "", "image/x-icon");
+    return;
+  }
+  if (url.pathname === "/assets/vercel-analytics.mjs") {
+    const script = await fs.readFile(VERCEL_ANALYTICS_FILE, "utf8");
+    sendText(res, 200, script, "application/javascript; charset=utf-8");
     return;
   }
   if (url.pathname !== "/" && url.pathname !== "/index.html") {
