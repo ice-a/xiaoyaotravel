@@ -141,13 +141,41 @@
     @media (max-width:1060px) {
       .content { grid-template-columns:1fr; }
       .toolbar { grid-template-columns:1fr auto; }
+      .left-pane,.main { padding:10px; }
+      .side-routes { min-height:auto; }
+      .side-route-list { max-height:320px; }
       .summary-card { grid-column:span 12; }
       .section h3 { font-size:20px; }
       .budget-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
     }
     @media (max-width:720px) {
+      .app { width:calc(100% - 14px); margin:7px auto; gap:8px; }
+      .header { padding:9px; gap:8px; }
+      .header-top { align-items:flex-start; gap:8px; }
+      .tabs { width:100%; }
+      .tab { flex:1; text-align:center; }
+      .toolbar { grid-template-columns:1fr; }
+      #count { justify-self:start; }
+      #reload { width:100%; }
+      .hist-item { min-width:205px; }
+      .form h3 { font-size:20px; }
+      .section h3 { font-size:18px; }
       .overview-grid,.tips-grid { grid-template-columns:1fr; }
       .budget-grid { grid-template-columns:1fr; }
+      .summary-card { min-height:260px; }
+      .chart { height:220px; }
+      .side-routes h4 { font-size:16px; }
+      .side-route-list { max-height:280px; }
+      #map { height:260px; }
+    }
+    @media (max-width:480px) {
+      input,select,button { padding:10px; }
+      .chips { gap:6px; }
+      .chip { font-size:11px; }
+      .hist-item { min-width:185px; }
+      .day,.budget-item,.tips-box,.overview-card,.side-route-day { padding:7px; }
+      .slot { font-size:12px; line-height:1.45; }
+      #map { height:230px; }
     }
   </style>
 </head>
