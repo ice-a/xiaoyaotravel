@@ -80,6 +80,71 @@ function stableTemplateIdByKey(key) {
   return (hash % TEMPLATE_COUNT) + 1;
 }
 
+function normalizeRouteStep(step) {
+  if (!step || typeof step !== "object") return null;
+  const from = String(step.from || "").trim();
+  const to = String(step.to || "").trim();
+  if (!from || !to) return null;
+  return {
+    from,
+    to,
+    transport: String(step.transport || "步行").trim(),
+    line: String(step.line || "").trim(),
+    duration: String(step.duration || "").trim(),
+    note: String(step.note || "").trim()
+  };
+}
+
+function fallbackRoutes(location, itinerary, days) {
+  const base = Array.isArray(itinerary) ? itinerary : [];
+  return Array.from({ length: days }).map((_, idx) => {
+    const day = base[idx] || {};
+    const dayNo = idx + 1;
+    const station = `${location}高铁站`;
+    const hotel = `${location}酒店`;
+    const morning = String(day.morning || `${location}核心景点`).trim();
+    const afternoon = String(day.afternoon || `${location}地标街区`).trim();
+    const evening = String(day.evening || `${location}夜游区`).trim();
+    return {
+      day: dayNo,
+      title: String(day.theme || `Day ${dayNo} 路线`).trim(),
+      steps: [
+        { from: station, to: hotel, transport: "地铁/公交", line: "", duration: "40分钟", note: "抵达后先办理入住" },
+        { from: hotel, to: morning, transport: "地铁/打车", line: "", duration: "25分钟", note: "上午游览" },
+        { from: morning, to: afternoon, transport: "地铁/公交", line: "", duration: "20分钟", note: "中午就近用餐" },
+        { from: afternoon, to: evening, transport: "步行/地铁", line: "", duration: "20分钟", note: "晚间活动" },
+        { from: evening, to: hotel, transport: "地铁/打车", line: "", duration: "30分钟", note: "返程休息" }
+      ]
+    };
+  });
+}
+
+function normalizeRoutes(rawRoutes, location, itinerary, days) {
+  if (!Array.isArray(rawRoutes) || !rawRoutes.length) {
+    return fallbackRoutes(location, itinerary, days);
+  }
+
+  const normalized = rawRoutes
+    .map((route, idx) => {
+      if (!route || typeof route !== "object") return null;
+      const day = Number(route.day) || idx + 1;
+      const steps = Array.isArray(route.steps) ? route.steps.map(normalizeRouteStep).filter(Boolean) : [];
+      if (!steps.length) return null;
+      return {
+        day,
+        title: String(route.title || `Day ${day} 路线`).trim(),
+        steps
+      };
+    })
+    .filter(Boolean)
+    .slice(0, days);
+
+  if (!normalized.length) {
+    return fallbackRoutes(location, itinerary, days);
+  }
+  return normalized;
+}
+
 async function readBody(req) {
   const chunks = [];
   for await (const chunk of req) {
@@ -108,6 +173,7 @@ async function getCollection() {
 
 function normalizeGuidePayload(payload, location, days) {
   const itinerary = Array.isArray(payload.itinerary) ? payload.itinerary.slice(0, days) : [];
+  const routes = normalizeRoutes(payload.routes, location, itinerary, days);
 
   return {
     title: payload.title || `${location}${days}天旅游攻略`,
@@ -120,6 +186,7 @@ function normalizeGuidePayload(payload, location, days) {
     foods: Array.isArray(payload.foods) ? payload.foods.slice(0, 6) : [],
     hotels: Array.isArray(payload.hotels) ? payload.hotels.slice(0, 6) : [],
     itinerary,
+    routes,
     budget: {
       transport: payload.budget?.transport || "待补充",
       hotel: payload.budget?.hotel || "待补充",
@@ -167,10 +234,15 @@ async function generateGuide(location, days) {
     '  "itinerary": [',
     '    { "theme": "字符串", "morning": "字符串", "afternoon": "字符串", "evening": "字符串" }',
     "  ],",
+    '  "routes": [',
+    '    { "day": 1, "title": "Day 1 交通路线", "steps": [',
+    '      { "from": "南沙高铁站", "to": "酒店", "transport": "地铁", "line": "18号线", "duration": "35分钟", "note": "先办理入住" }',
+    "    ] }",
+    "  ],",
     '  "budget": { "transport": "字符串", "hotel": "字符串", "food": "字符串", "misc": "字符串" },',
     '  "tips": ["字符串"]',
     "}",
-    "itinerary 数量必须与天数一致，预算建议请给出人民币区间。"
+    "itinerary 数量必须与天数一致，routes 必须覆盖每一天并给出可执行交通链路（如 高铁站->地铁/公交->住宿->景点）。预算建议请给出人民币区间。"
   ].join("\n");
 
     let response;
