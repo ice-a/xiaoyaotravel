@@ -3,599 +3,553 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>旅伴手册 3.2</title>
-  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8097273255284826"
-    crossorigin="anonymous"></script>
-    <script defer src="https://count.020417.xyz/script.js" data-website-id="52e6dac5-f235-4fed-bde8-045fca43edc1"></script>
+  <title>旅游攻略生成器</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+  <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
   <style>
     :root {
-      --bg: #f5efe4;
-      --panel: #fffaf2;
-      --ink: #1e2a2f;
-      --muted: #5e6f77;
-      --line: rgba(30, 42, 47, 0.14);
-      --primary: #174e63;
-      --accent: #c66a43;
+      --bg:#f2efe8;
+      --line:#dcd7cd;
+      --ink:#27343b;
+      --sub:#66757c;
+      --brand:#2e6f8b;
+      --brand-soft:#e9f2f7;
+      --card:#fff;
+      --panel:#faf8f4;
     }
-    * { box-sizing: border-box; }
+    * { box-sizing:border-box; }
     body {
-      margin: 0;
-      color: var(--ink);
-      font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
-      background: radial-gradient(circle at 0 0, rgba(198, 106, 67, 0.15), transparent 33%),
-                  radial-gradient(circle at 100% 0, rgba(23, 78, 99, 0.15), transparent 30%),
-                  var(--bg);
+      margin:0;
+      color:var(--ink);
+      font-family:"PingFang SC","Microsoft YaHei","Segoe UI",sans-serif;
+      background:
+        radial-gradient(1000px 360px at -20% -8%, rgba(46,111,139,.12), transparent 65%),
+        radial-gradient(900px 320px at 120% -8%, rgba(148,121,77,.1), transparent 64%),
+        var(--bg);
     }
-    .app {
-      width: min(1300px, calc(100% - 24px));
-      margin: 12px auto;
-      display: grid;
-      gap: 10px;
-    }
-    .card {
-      border: 1px solid rgba(255, 255, 255, 0.75);
-      border-radius: 16px;
-      background: rgba(255, 250, 242, 0.88);
-      box-shadow: 0 18px 36px rgba(18, 30, 35, 0.12);
-      backdrop-filter: blur(10px);
-    }
-    .top {
-      padding: 12px;
-      display: grid;
-      gap: 8px;
-    }
-    .top-head {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-    .brand {
-      font-weight: 800;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      background: var(--accent);
-      box-shadow: 0 0 0 7px rgba(198, 106, 67, 0.15);
-    }
-    .chips { display: flex; gap: 8px; flex-wrap: wrap; }
-    .chip {
-      border: 1px solid rgba(23, 78, 99, 0.24);
-      border-radius: 999px;
-      padding: 4px 10px;
-      background: #fff;
-      color: #1d5f72;
-      font-weight: 700;
-      font-size: 12px;
-    }
-    .history { border: 1px solid var(--line); border-radius: 12px; background: rgba(255, 255, 255, 0.8); padding: 8px; display: grid; gap: 8px; }
-    .history-bar { display: grid; grid-template-columns: 1fr auto auto; gap: 8px; align-items: center; }
-    .input, select {
-      border: 1px solid var(--line);
-      border-radius: 10px;
-      padding: 9px 11px;
-      font: inherit;
-      background: #fff;
-      color: var(--ink);
-      width: 100%;
-    }
-    .count { font-size: 12px; color: var(--muted); font-weight: 700; }
-    .toggle, .btn {
-      border-radius: 999px;
-      padding: 8px 12px;
-      font-weight: 700;
-      cursor: pointer;
-      font-size: 13px;
-    }
-    .toggle { border: 1px solid var(--line); background: #fff; }
-    .strip { display: flex; gap: 8px; overflow: auto; }
-    .item {
-      min-width: 230px;
-      max-width: 270px;
-      border: 1px solid rgba(23, 78, 99, 0.2);
-      border-radius: 12px;
-      background: #fff;
-      padding: 8px;
-      display: grid;
-      gap: 4px;
-      cursor: pointer;
-    }
-    .item.active { border-color: rgba(23, 78, 99, 0.55); }
-    .ihead { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-    .ikey { font-size: 13px; font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .idel {
-      border: 1px solid rgba(177, 53, 24, 0.35);
-      border-radius: 999px;
-      font-size: 11px;
-      padding: 3px 8px;
-      color: #9e2f1a;
-      background: rgba(177, 53, 24, 0.07);
-      cursor: pointer;
-    }
-    .isub { font-size: 12px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .app { width:min(1360px,calc(100% - 28px)); margin:14px auto; display:grid; gap:12px; }
+    .card { border:1px solid var(--line); border-radius:14px; background:var(--card); box-shadow:0 10px 28px rgba(30,40,45,.08); }
+    .header { padding:12px; display:grid; gap:10px; }
+    .header-top { display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; }
+    .brand { font-size:18px; font-weight:900; display:flex; align-items:center; gap:8px; }
+    .brand:before { content:""; width:8px; height:8px; border-radius:50%; background:var(--brand); box-shadow:0 0 0 6px rgba(46,111,139,.14); }
+    .tabs { display:flex; gap:8px; }
+    .tab { text-decoration:none; border:1px solid #c8d6df; background:#fff; color:var(--brand); border-radius:999px; font-size:12px; font-weight:800; padding:6px 12px; }
+    .tab.active { background:var(--brand-soft); border-color:#8fb5c4; color:#0e4f67; }
+    .toolbar { display:grid; grid-template-columns:1fr auto auto; gap:8px; }
+    input,select,button { font:inherit; border:1px solid var(--line); border-radius:10px; padding:9px 11px; background:#fff; color:var(--ink); }
+    button { cursor:pointer; font-weight:700; }
+    .btn-primary { background:linear-gradient(140deg,#2e6f8b,#1e586f); color:#fff; border:none; }
+    .sub { color:var(--sub); font-size:12px; }
 
-    .work { display: grid; grid-template-columns: minmax(340px, 400px) minmax(0, 1fr); gap: 10px; min-height: 0; }
-    .left { min-height: 0; }
-    .form { padding: 12px; display: grid; gap: 10px; }
-    .form h2 { margin: 0; }
-    .help, .sub { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.55; }
-    .fg { display: grid; gap: 10px; }
-    label { display: grid; gap: 6px; font-size: 14px; font-weight: 700; }
-    .btns { display: flex; gap: 8px; flex-wrap: wrap; }
-    .btn.p { border: none; color: #fff; background: linear-gradient(145deg, #1a2a31, #36505a); }
-    .btn.s { border: 1px solid var(--line); background: #fff; }
-    .status { min-height: 20px; font-size: 13px; color: var(--muted); }
-    .status.err { color: #b13518; }
-    .route-panel { padding: 12px; display: grid; gap: 10px; min-height: 360px; }
-    .route-panel h3 { margin: 0; font-size: 18px; }
-    .route-panel-body { display: grid; gap: 8px; }
-    .route-day { border: 1px solid rgba(23,35,40,.12); border-radius: 10px; background: rgba(255,255,255,.92); padding: 8px; display: grid; gap: 6px; }
-    .route-day.active { border-color: rgba(23,78,99,.6); box-shadow: inset 0 0 0 1px rgba(23,78,99,.24); background: #fff; }
-    .route-day-head { font-size: 13px; font-weight: 800; }
-    .route-step { border: 1px solid rgba(23,35,40,.08); border-radius: 8px; background: rgba(245,239,228,.62); padding: 7px 8px; display: grid; gap: 4px; }
-    .route-step-top { font-size: 13px; }
-    .transport-tag { display: inline-flex; align-items: center; border-radius: 999px; font-size: 11px; padding: 2px 8px; font-weight: 700; }
-    .t-metro { background: #e7f0ff; color: #2f5fa8; border: 1px solid #b8cdf5; }
-    .t-bus { background: #e8f6eb; color: #2f7b43; border: 1px solid #bfe4c8; }
-    .t-taxi { background: #fff4e4; color: #9a5f11; border: 1px solid #f1d0a3; }
-    .t-walk { background: #f1f0f8; color: #5b4da1; border: 1px solid #d3cfee; }
-    .t-train { background: #e9f8f8; color: #0f6f6a; border: 1px solid #bce4e2; }
-    .t-other { background: #f1f3f5; color: #4d5a63; border: 1px solid #d6dde2; }
-    .ad-wrap { border-top: 1px solid rgba(23,35,40,.08); padding-top: 8px; margin-top: 2px; min-height: 120px; display: grid; gap: 8px; }
-    .ad-fallback { display: none; border: 1px dashed rgba(23,78,99,.28); border-radius: 8px; padding: 10px; color: var(--muted); font-size: 12px; background: rgba(255,255,255,.7); }
-    .ad-fallback.show { display: block; }
+    .loc-strip { display:flex; gap:8px; flex-wrap:wrap; overflow:visible; }
+    .loc-chip { border:1px solid #c8d6df; border-radius:999px; background:#fff; color:var(--brand); font-size:12px; font-weight:800; padding:6px 11px; cursor:pointer; }
+    .loc-chip.active { background:var(--brand-soft); border-color:#8fb5c4; }
+    .hist-strip { display:flex; gap:8px; overflow:auto; padding-bottom:2px; }
+    .hist-item { min-width:245px; border:1px solid #d5ddd3; border-radius:12px; background:#fff; padding:8px; display:grid; gap:4px; cursor:pointer; }
+    .hist-item.active { box-shadow:inset 0 0 0 1px #5a8ea1; border-color:#93b4c1; }
+    .hist-head { display:flex; justify-content:space-between; align-items:center; gap:8px; }
+    .del-btn { border:1px solid #e6b9ae; background:#fff6f4; color:#a54531; border-radius:999px; padding:3px 8px; font-size:11px; }
 
-    .scroll { min-height: 0; overflow: auto; border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.75); background: rgba(255, 250, 242, 0.7); box-shadow: 0 18px 36px rgba(18,30,35,0.12); padding: 10px; }
-    .guide { padding: 10px; border-radius: 12px; background: linear-gradient(160deg, rgba(255,255,255,.7), rgba(255,247,236,.9)); }
-    .shell { border: 1px solid rgba(23,35,40,.08); border-radius: 14px; padding: 10px; background: #f8f4ec; display: grid; gap: 8px; }
-    .ban { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
-    .badge { font-size: 12px; font-weight: 800; border: 1px solid rgba(23,78,99,.3); border-radius: 999px; padding: 4px 10px; background: #fff; color: #1f5f74; }
-    .layout { display: grid; gap: 8px; }
-    .gcard { border: 1px solid rgba(23,35,40,.08); border-radius: 12px; background: rgba(255,255,255,.92); padding: 10px; }
-    .title { margin: 8px 0 0; font-size: clamp(1.35rem, 2.8vw, 1.95rem); line-height: 1.2; }
-    .tags { display: flex; gap: 7px; flex-wrap: wrap; margin-top: 8px; }
-    .tag { font-size: 12px; font-weight: 700; border: 1px solid rgba(23,78,99,.24); border-radius: 999px; background: rgba(23,78,99,.08); padding: 4px 9px; }
-    .g2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 8px; }
-    .mini { border: 1px solid rgba(23,35,40,.08); border-radius: 10px; background: rgba(255,255,255,.9); padding: 9px; }
-    .mini h4 { margin: 0; font-size: 14px; }
-    .mini p, .mini li { margin: 6px 0 0; color: var(--muted); font-size: 13px; line-height: 1.55; }
-    .mini ul { margin: 6px 0 0; padding-left: 18px; }
+    .content { display:grid; grid-template-columns:minmax(330px,390px) minmax(0,1fr); gap:12px; }
+    .content.summary-mode { grid-template-columns:1fr; }
+    .content.summary-mode #left-pane { display:none; }
+    .left-pane { padding:12px; }
+    .form { display:grid; gap:10px; }
+    .form h3 { margin:0; font-size:24px; font-weight:900; color:#173d4f; }
+    .status-msg { min-height:18px; font-size:13px; color:var(--sub); }
+    .status-msg.err { color:#a54531; }
 
-    .days { display: grid; gap: 8px; }
-    .day { border: 1px solid rgba(23,35,40,.08); border-radius: 10px; background: rgba(255,255,255,.9); padding: 9px; }
-    .day h4 { margin: 0 0 8px; font-size: 15px; }
-    .sch { display: grid; gap: 6px; }
-    .slot { display: grid; grid-template-columns: 66px 1fr; gap: 7px; border: 1px solid rgba(23,35,40,.06); border-radius: 9px; background: rgba(244,238,227,.74); padding: 6px 8px; font-size: 13px; }
-
-    .bud { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
-    .bud strong { display: block; margin-top: 5px; font-size: 1.05rem; }
-
-    .empty { padding: 28px; text-align: center; }
-    .reveal { opacity: 0; transform: translateY(14px); transition: opacity .5s ease, transform .5s ease; transition-delay: var(--d, 0ms); }
-    .reveal.on { opacity: 1; transform: translateY(0); }
-
-    @media (max-width: 1100px) {
-      .work { grid-template-columns: 1fr; }
-      .scroll { min-height: 440px; max-height: 68vh; }
+    .side-routes {
+      margin-top:10px;
+      border:1px solid #d9e3ea;
+      border-radius:12px;
+      background:linear-gradient(180deg,#ffffff 0%,#fbfdff 100%);
+      box-shadow:0 10px 26px rgba(24,56,73,.08), inset 0 1px 0 rgba(255,255,255,.85);
+      min-height:460px;
+      padding:10px;
+      display:grid;
+      align-content:start;
+      gap:8px;
     }
-    @media (max-width: 840px) {
-      .history-bar { grid-template-columns: 1fr auto; }
-      .count { grid-column: 1 / -1; }
-      .g2, .bud { grid-template-columns: 1fr; }
-      .slot { grid-template-columns: 1fr; }
+    .side-routes h4 { margin:0; font-size:18px; color:#1d4659; }
+    .side-route-list { display:grid; gap:8px; max-height:560px; overflow:auto; padding-right:2px; }
+    .side-route-day {
+      border:1px solid #dce6ed;
+      border-radius:10px;
+      background:#ffffff;
+      box-shadow:0 4px 12px rgba(23,53,68,.06);
+      padding:8px;
+      cursor:pointer;
+      display:grid;
+      gap:5px;
+      transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+    }
+    .side-route-day:hover {
+      transform:translateY(-1px);
+      box-shadow:0 8px 18px rgba(23,53,68,.1);
+      border-color:#c8d8e4;
+    }
+    .side-route-day.active {
+      border-color:#8eb2cf;
+      background:linear-gradient(180deg,#f8fcff 0%,#f0f7fd 100%);
+      box-shadow:0 10px 20px rgba(46,111,139,.18), inset 0 1px 0 rgba(255,255,255,.85);
+    }
+    .side-route-day b { font-size:14px; color:#1e4d60; }
+    .side-route-step { color:var(--sub); font-size:12px; line-height:1.5; }
+
+    .main { padding:12px; display:grid; gap:10px; align-content:start; }
+    .section { border:1px solid var(--line); border-radius:12px; background:var(--panel); padding:10px; display:grid; gap:8px; }
+    .section h3 { margin:0; font-size:22px; font-weight:900; color:#1d4659; }
+    .chips { display:flex; flex-wrap:wrap; gap:8px; }
+    .chip { border:1px solid #c8d8e1; border-radius:999px; background:#f7fcff; color:#1e6179; font-size:12px; font-weight:800; padding:4px 10px; }
+    .overview-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+    .overview-card { border:1px solid #dde6ee; border-radius:10px; background:#fff; padding:10px; display:grid; gap:6px; }
+    .overview-card h4 { margin:0; font-size:14px; color:#1e4d60; }
+    .day { border:1px solid #e2e9ee; border-radius:10px; background:#fff; padding:8px; cursor:pointer; }
+    .day.active { border-color:#7ea6d8; box-shadow:inset 0 0 0 1px #7ea6d8; background:#eef6ff; }
+    .slot { color:var(--sub); font-size:13px; margin-top:4px; line-height:1.52; }
+    .budget-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; }
+    .budget-item { border:1px solid #dde6ee; border-radius:10px; background:#fff; padding:8px; display:grid; gap:4px; }
+    .budget-item b { font-size:13px; color:#1e4d60; }
+    .tips-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+    .tips-box { border:1px solid #dde6ee; border-radius:10px; background:#fff; padding:8px; }
+    .tips-box h4 { margin:0 0 6px; font-size:14px; color:#1e4d60; }
+    .tips-list { margin:0; padding-left:18px; color:var(--sub); font-size:13px; line-height:1.6; display:grid; gap:2px; }
+    #map { width:100%; height:340px; border:1px solid #d9e4ec; border-radius:10px; background:#f8fbfd; }
+
+    .coupon { border:1px dashed #8fb5c4; border-radius:10px; padding:10px; background:#f6fcff; display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap; }
+    .coupon a { color:#0e4f67; font-weight:700; }
+    .filters { display:flex; gap:8px; flex-wrap:wrap; }
+    .filter { border:1px solid #bfced9; background:#fff; color:var(--brand); border-radius:999px; padding:6px 12px; font-size:12px; font-weight:800; cursor:pointer; }
+    .filter.active { background:var(--brand-soft); border-color:#8fb5c4; }
+    .summary-grid { display:grid; grid-template-columns:repeat(12,minmax(0,1fr)); gap:10px; }
+    .summary-card { border:1px solid var(--line); border-radius:12px; background:#fff; padding:10px; display:grid; gap:8px; grid-column:span 4; min-height:320px; }
+    .summary-card h3 { margin:0; font-size:15px; }
+    .summary-stat { display:grid; gap:6px; align-content:start; color:var(--sub); font-size:13px; }
+    .chart { width:100%; height:250px; }
+
+    @media (max-width:1240px) { .summary-card { grid-column:span 6; } }
+    @media (max-width:1060px) {
+      .content { grid-template-columns:1fr; }
+      .toolbar { grid-template-columns:1fr auto; }
+      .summary-card { grid-column:span 12; }
+      .section h3 { font-size:20px; }
+      .budget-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+    }
+    @media (max-width:720px) {
+      .overview-grid,.tips-grid { grid-template-columns:1fr; }
+      .budget-grid { grid-template-columns:1fr; }
     }
   </style>
 </head>
 <body>
   <div class="app">
-    <header id="nav" class="card top">
-      <div class="top-head">
-        <div class="brand"><span class="dot"></span><span>旅伴手册 3.2</span></div>
-        <div class="chips">
-          <span class="chip">路线可视化</span>
-          <span class="chip">交通链路生成</span>
-          <span class="chip">1分钟无操作轮播</span>
-        </div>
+    <header class="card header">
+      <div class="header-top">
+        <div class="brand">旅游攻略生成器</div>
+        <nav class="tabs">
+          <a id="tab-guides" class="tab active" href="#/guides">攻略</a>
+          <a id="tab-summary" class="tab" href="#/status">汇总</a>
+        </nav>
       </div>
-
-      <div id="hnav" class="history">
-        <div class="history-bar">
-          <input id="hsearch" class="input" placeholder="按地点搜索历史（无需密码）" />
-          <div id="hcount" class="count">0 条</div>
-          <button id="htoggle" class="toggle" type="button">折叠历史</button>
-        </div>
-        <div id="hstrip" class="strip"></div>
+      <div class="toolbar">
+        <input id="search" placeholder="按地点/缓存键/记录ID搜索历史" />
+        <div id="count" class="sub">0 条</div>
+        <button id="reload">刷新</button>
       </div>
+      <div id="loc-strip" class="loc-strip"></div>
+      <div id="hist-strip" class="hist-strip"></div>
     </header>
 
-    <section class="work">
-      <aside class="left">
-        <section class="card form">
-          <h2>生成旅游攻略</h2>
-          <p class="help">输入地点与天数，系统先查 Mongo 缓存，未命中才调用模型生成并保存。</p>
-          <form id="form" class="fg">
-            <label>旅游地点
-              <input id="location" class="input" required placeholder="例如：南沙、成都、东京" />
-            </label>
-            <label>游玩天数
-              <select id="days" class="input">
-                <option value="1">1 天</option>
-                <option value="2" selected>2 天</option>
-                <option value="3">3 天</option>
-                <option value="4">4 天</option>
-                <option value="5">5 天</option>
-                <option value="6">6 天</option>
-                <option value="7">7 天</option>
-              </select>
-            </label>
-            <div class="btns">
-              <button id="submit" class="btn p" type="submit">生成并保存</button>
-              <button id="refresh" class="btn s" type="button">刷新历史</button>
-            </div>
-          </form>
-          <div id="status" class="status"></div>
-          <p class="help">删除历史需输入服务端配置的 <code>DELETE_PASSWORD</code>。</p>
-        </section>
-        <section class="card route-panel">
-          <h3>路线可视化</h3>
-          <p class="help">点击右侧“每日行程”的某一天，此处同步高亮对应路线；不同交通方式使用不同颜色。</p>
-          <div id="route-panel-body" class="route-panel-body">
-            <p class="sub">还没有路线数据。</p>
+    <section id="content" class="content">
+      <aside id="left-pane" class="card left-pane">
+        <div class="form">
+          <h3>生成旅游攻略</h3>
+          <label>旅游地点 <input id="location" placeholder="例如：成都、首尔、东京" /></label>
+          <label>游玩天数
+            <select id="days">
+              <option value="1">1 天</option><option value="2" selected>2 天</option><option value="3">3 天</option>
+              <option value="4">4 天</option><option value="5">5 天</option><option value="6">6 天</option><option value="7">7 天</option>
+            </select>
+          </label>
+          <label><input id="use-cache" type="checkbox" checked /> 使用缓存命中（不勾选则直接重新生成）</label>
+          <div class="chips">
+            <button id="submit" class="btn-primary" type="button">生成并保存</button>
+            <button id="regenerate" type="button">重新生成</button>
           </div>
-          <div class="ad-wrap">
-            <ins class="adsbygoogle"
-              id="left-route-ad"
-              style="display:block"
-              data-ad-client="ca-pub-8097273255284826"
-              data-ad-slot="6587178009"
-              data-ad-format="auto"
-              data-full-width-responsive="true"></ins>
-            <div id="left-route-ad-fallback" class="ad-fallback">广告位招商中</div>
+          <div id="status" class="status-msg"></div>
+          <div class="sub">删除历史时需要输入 <code>DELETE_PASSWORD</code>。</div>
+        </div>
+        <section class="side-routes">
+          <h4>路线可视化</h4>
+          <div id="side-routes" class="side-route-list">
+            <div class="sub">请选择一条历史攻略后查看路线。</div>
           </div>
         </section>
       </aside>
-
-      <div id="scroll" class="scroll">
-        <main id="root">
-          <div class="empty">
-            <h3>还没有选中攻略</h3>
-            <p class="sub">在顶部导航选择历史攻略，或先生成一个新的地点攻略。</p>
-          </div>
-        </main>
-      </div>
+      <main id="root" class="card main">
+        <div class="sub">请选择历史记录，或者先生成一条新的攻略。</div>
+      </main>
     </section>
   </div>
 
   <script>
-    (adsbygoogle = window.adsbygoogle || []).push({});
+    const $ = (id) => document.getElementById(id);
+    const S = {
+      items: [],
+      activeId: "",
+      activeLoc: "all",
+      q: "",
+      route: "guides",
+      winDays: 0,
+      map: null,
+      mapLayer: null,
+      charts: [],
+      couponUrl: "",
+      activeRouteDay: 1
+    };
 
-    (function adFallbackGuard(){
-      const ad = document.getElementById("left-route-ad");
-      const fallback = document.getElementById("left-route-ad-fallback");
-      if(!ad || !fallback) return;
+    const esc = (v) => String(v ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+    const setMsg = (m, err) => { $("status").textContent = m || ""; $("status").className = err ? "status-msg err" : "status-msg"; };
+    const api = async (url, opt) => { const r = await fetch(url, opt); const d = await r.json().catch(() => ({})); if (!r.ok) throw new Error(d.error || "请求失败"); return d; };
+    const topN = (map, n = 8) => [...map.entries()].sort((a, b) => b[1] - a[1]).slice(0, n).map(([name, value]) => ({ name, value }));
 
-      function hasFilled(){
-        const hasIframe = !!ad.querySelector("iframe");
-        const h = ad.offsetHeight || 0;
-        return hasIframe || h >= 80;
-      }
+    const visible = () => {
+      const byLoc = S.activeLoc === "all" ? S.items : S.items.filter((x) => String(x.location || "") === S.activeLoc);
+      const k = S.q.trim().toLowerCase();
+      if (!k) return byLoc;
+      return byLoc.filter((x) => String(x.location || "").toLowerCase().includes(k) || String(x.key || "").toLowerCase().includes(k) || String(x.id || "").toLowerCase().includes(k));
+    };
 
-      function refresh(){
-        fallback.classList.toggle("show", !hasFilled());
-      }
+    const disposeCharts = () => { S.charts.forEach((c) => { try { c.dispose(); } catch {} }); S.charts = []; };
 
-      setTimeout(refresh, 2500);
-      setTimeout(refresh, 6000);
-      const ob = new MutationObserver(refresh);
-      ob.observe(ad, { childList: true, subtree: true, attributes: true });
-    })();
-  </script>
+    const pie = (id, data) => {
+      const el = $(id); if (!el || !window.echarts) return;
+      const c = echarts.init(el);
+      c.setOption({ tooltip: { trigger: "item" }, legend: { bottom: 0, type: "scroll" }, series: [{ type: "pie", radius: ["35%", "70%"], data: data.length ? data : [{ name: "暂无数据", value: 1 }] }] });
+      S.charts.push(c);
+    };
 
-  <script>
-    const T={1:{n:"海湾清晨"},2:{n:"城市博览"},3:{n:"霓虹夜行"},4:{n:"山林步调"},5:{n:"复古街区"},6:{n:"海港漫游"},7:{n:"艺文周末"},8:{n:"轻探险线"},9:{n:"自然疗愈"},10:{n:"都市效率"}};
+    const bar = (id, data, color) => {
+      const el = $(id); if (!el || !window.echarts) return;
+      const c = echarts.init(el);
+      const names = data.map((x) => x.name);
+      c.setOption({ tooltip: { trigger: "axis" }, grid: { left: 36, right: 16, top: 18, bottom: 52 }, xAxis: { type: "category", data: names, axisLabel: { interval: 0, rotate: names.length > 4 ? 24 : 0 } }, yAxis: { type: "value" }, series: [{ type: "bar", data: data.map((x) => x.value), itemStyle: { color: color || "#1f6f8b", borderRadius: [6, 6, 0, 0] } }] });
+      S.charts.push(c);
+    };
 
-    const hstrip=document.getElementById("hstrip");
-    const hsearch=document.getElementById("hsearch");
-    const hcount=document.getElementById("hcount");
-    const htoggle=document.getElementById("htoggle");
-    const hnav=document.getElementById("hnav");
-    const nav=document.getElementById("nav");
-    const root=document.getElementById("root");
-    const scroll=document.getElementById("scroll");
-    const statusEl=document.getElementById("status");
-    const form=document.getElementById("form");
-    const locationEl=document.getElementById("location");
-    const daysEl=document.getElementById("days");
-    const submit=document.getElementById("submit");
-    const refresh=document.getElementById("refresh");
-    const routePanelBody=document.getElementById("route-panel-body");
-
-    let items=[];
-    let activeKey="";
-    let q="";
-    let collapsed=false;
-    let autoTimer=null;
-    let autoIdx=0;
-    let lastTouch=Date.now();
-    let navHidden=false;
-    let lastTop=0;
-    let activeRouteDay=1;
-    let currentRoutes=[];
-
-    const s=(m,e)=>{statusEl.textContent=m||"";statusEl.className=e?"status err":"status"};
-    const esc=v=>String(v??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/\"/g,"&quot;").replace(/'/g,"&#39;");
-    const tid=v=>{const n=Number(v);return Number.isInteger(n)&&n>=1&&n<=10?n:1};
-    const li=a=>!Array.isArray(a)||!a.length?"<p class='sub'>暂无内容</p>":"<ul>"+a.map(x=>"<li>"+esc(x)+"</li>").join("")+"</ul>";
-
-    const hit=()=>{lastTouch=Date.now();if(navHidden){navHidden=false;nav.classList.remove("hidden")}};
-    const filtered=()=>{const k=q.trim().toLowerCase();if(!k)return items;return items.filter(i=>String(i.location||"").toLowerCase().includes(k)||String(i.key||"").toLowerCase().includes(k));};
-    const syncCollapse=()=>{hnav.classList.toggle("collapsed",collapsed);htoggle.textContent=collapsed?"展开历史":"折叠历史";};
-
-    function startAuto(){
-      if(autoTimer)clearInterval(autoTimer);
-      autoTimer=setInterval(()=>{
-        if(collapsed)return;
-        if(Date.now()-lastTouch<60000)return;
-        const f=filtered();
-        if(!f.length)return;
-        autoIdx=(autoIdx+1)%f.length;
-        const n=f[autoIdx];
-        if(!n||n.key===activeKey)return;
-        activeKey=n.key;
-        renderHistory();
-        renderGuide(n);
-      },5000);
+    async function geocodeOne(q, city) {
+      const d = await api(`/api/geocode?q=${encodeURIComponent(q)}&city=${encodeURIComponent(city || "")}`);
+      return d.point || null;
     }
 
-    function reveal(){
-      const nodes=[...document.querySelectorAll(".reveal")];
-      nodes.forEach((n,i)=>n.style.setProperty("--d",`${(i%8)*45}ms`));
-      if(!("IntersectionObserver" in window)){nodes.forEach(n=>n.classList.add("on"));return;}
-      const ob=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add("on");ob.unobserve(e.target)}}),{threshold:.14});
-      nodes.forEach(n=>ob.observe(n));
-    }
-
-    function empty(){
-      root.innerHTML="<div class='empty'><h3>还没有选中攻略</h3><p class='sub'>在顶部导航选择历史攻略，或先生成一个新的地点攻略。</p></div>";
-      routePanelBody.innerHTML="<p class='sub'>还没有路线数据。</p>";
-    }
-
-    function fallbackRoutes(location,itinerary,days){
-      const base=Array.isArray(itinerary)?itinerary:[];
-      return Array.from({length:days}).map((_,idx)=>{
-        const d=base[idx]||{};
-        const day=idx+1;
-        const station=`${location||"目的地"}高铁站`;
-        const hotel=`${location||"目的地"}酒店`;
-        const morning=String(d.morning||`${location||"目的地"}核心景点`).trim();
-        const afternoon=String(d.afternoon||`${location||"目的地"}地标街区`).trim();
-        const evening=String(d.evening||`${location||"目的地"}夜游区`).trim();
-        return {
-          day,
-          title:String(d.theme||`Day ${day} 路线`).trim(),
-          steps:[
-            {from:station,to:hotel,transport:"地铁/公交",line:"",duration:"40分钟",note:"先办理入住"},
-            {from:hotel,to:morning,transport:"地铁/打车",line:"",duration:"25分钟",note:"上午游览"},
-            {from:morning,to:afternoon,transport:"地铁/公交",line:"",duration:"20分钟",note:"中午就近用餐"},
-            {from:afternoon,to:evening,transport:"步行/地铁",line:"",duration:"20分钟",note:"晚间活动"},
-            {from:evening,to:hotel,transport:"地铁/打车",line:"",duration:"30分钟",note:"返程休息"}
-          ]
-        };
+    function renderLocStrip() {
+      const m = new Map();
+      S.items.forEach((x) => { const loc = String(x.location || "").trim(); if (loc) m.set(loc, (m.get(loc) || 0) + 1); });
+      const html = [`<button class="loc-chip${S.activeLoc === "all" ? " active" : ""}" data-loc="all">全部 (${S.items.length})</button>`];
+      [...m.entries()].sort((a, b) => a[0].localeCompare(b[0], "zh-CN")).forEach(([loc, cnt]) => html.push(`<button class="loc-chip${S.activeLoc === loc ? " active" : ""}" data-loc="${esc(loc)}">${esc(loc)} (${cnt})</button>`));
+      $("loc-strip").innerHTML = html.join("");
+      $("loc-strip").querySelectorAll("[data-loc]").forEach((b) => b.onclick = () => {
+        S.activeLoc = b.dataset.loc || "all";
+        const v = visible();
+        if (!v.some((x) => (x.id || x.key) === S.activeId)) S.activeId = v[0] ? (v[0].id || v[0].key) : "";
+        renderLocStrip();
+        renderHistStrip();
+        if (S.route === "guides") renderCurrent();
       });
     }
 
-    function normalizeRoutes(rec){
-      const c=rec?.content||{};
-      const itinerary=Array.isArray(c.itinerary)?c.itinerary:[];
-      const days=Math.max(Number(rec?.days)||itinerary.length||1,1);
-      const raw=Array.isArray(c.routes)?c.routes:[];
-      const normalized=raw.map((r,idx)=>{
-        const steps=Array.isArray(r?.steps)?r.steps.filter(step=>step&&step.from&&step.to):[];
-        if(!steps.length)return null;
-        return {
-          day:Number(r.day)||idx+1,
-          title:String(r.title||`Day ${idx+1} 路线`).trim(),
-          steps:steps.map(step=>({
-            from:String(step.from||""),
-            to:String(step.to||""),
-            transport:String(step.transport||"步行"),
-            line:String(step.line||""),
-            duration:String(step.duration||""),
-            note:String(step.note||"")
-          }))
-        };
-      }).filter(Boolean);
-      return normalized.length?normalized:fallbackRoutes(rec?.location||"",itinerary,days);
-    }
-
-    function transportClass(transport){
-      const t=String(transport||"").toLowerCase();
-      if(t.includes("地铁")||t.includes("metro")||t.includes("subway")) return "t-metro";
-      if(t.includes("公交")||t.includes("bus")) return "t-bus";
-      if(t.includes("打车")||t.includes("出租")||t.includes("taxi")||t.includes("网约")) return "t-taxi";
-      if(t.includes("步行")||t.includes("walk")) return "t-walk";
-      if(t.includes("高铁")||t.includes("火车")||t.includes("rail")||t.includes("train")) return "t-train";
-      return "t-other";
-    }
-
-    function renderRoutePanel(routes,activeDay){
-      if(!Array.isArray(routes)||!routes.length){
-        routePanelBody.innerHTML="<p class='sub'>暂无路线信息。</p>";
-        return;
-      }
-      routePanelBody.innerHTML=routes.map(r=>{
-        const active=Number(r.day)===Number(activeDay)?" active":"";
-        const steps=Array.isArray(r.steps)?r.steps:[];
-        return `<article class="route-day${active}" data-route-day="${esc(r.day)}"><div class="route-day-head">Day ${esc(r.day)} · ${esc(r.title||"交通路线")}</div>${steps.map((step,idx)=>`<div class="route-step"><div class="route-step-top">${idx+1}. ${esc(step.from)} → ${esc(step.to)}</div><div class="sub"><span class="transport-tag ${transportClass(step.transport)}">${esc(step.transport||"交通")}</span>${step.line?` · ${esc(step.line)}`:""}${step.duration?` · ${esc(step.duration)}`:""}${step.note?` · ${esc(step.note)}`:""}</div></div>`).join("")}</article>`;
+    function renderHistStrip() {
+      const v = visible();
+      $("count").textContent = `${v.length} 条`;
+      if (!v.length) { $("hist-strip").innerHTML = `<div class="sub">当前筛选下没有历史记录。</div>`; return; }
+      $("hist-strip").innerHTML = v.map((x) => {
+        const id = x.id || x.key;
+        const t = x.updatedAt ? new Date(x.updatedAt).toLocaleString("zh-CN") : "-";
+        return `<article class="hist-item${id === S.activeId ? " active" : ""}" data-id="${esc(id)}"><div class="hist-head"><b>${esc(x.key || "-")}</b><button class="del-btn" data-del="${esc(id)}">删除</button></div><div class="sub">${esc(x.location || "-")} · ${esc(x.days)} 天</div><div class="sub">ID: ${esc(id)}</div><div class="sub">${esc(t)}</div></article>`;
       }).join("");
-    }
-
-    function setActiveRouteDay(day){
-      activeRouteDay=Number(day)||1;
-      renderRoutePanel(currentRoutes,activeRouteDay);
-      root.querySelectorAll(".itinerary-day[data-day]").forEach(el=>{
-        el.classList.toggle("active",Number(el.dataset.day)===activeRouteDay);
+      $("hist-strip").querySelectorAll(".hist-item").forEach((el) => el.onclick = (e) => {
+        if (e.target?.dataset?.del) return;
+        const id = el.dataset.id || "";
+        const item = S.items.find((x) => (x.id || x.key) === id);
+        if (!item) return;
+        S.activeId = id;
+        renderHistStrip();
+        if (S.route === "guides") renderGuide(item);
       });
-    }
-
-    function renderHistory(){
-      if(!items.length){
-        hcount.textContent="0 条";
-        hstrip.innerHTML="<div class='sub'>暂无历史攻略，先生成一条吧。</div>";
-        return;
-      }
-      const f=filtered();
-      hcount.textContent=`${f.length} 条`;
-      if(!f.length){
-        hstrip.innerHTML="<div class='sub'>没有匹配到历史攻略。</div>";
-        return;
-      }
-      autoIdx=Math.max(0,f.findIndex(i=>i.key===activeKey));
-      hstrip.innerHTML=f.map(i=>{
-        const active=i.key===activeKey?" active":"";
-        const t=tid(i.templateId);
-        const tm=T[t]?.n||"默认模板";
-        const time=i.updatedAt?new Date(i.updatedAt).toLocaleString("zh-CN"):"未知时间";
-        return `<article class="item${active}" data-key="${esc(i.key)}"><div class="ihead"><div class="ikey">${esc(i.key)}</div><button class="idel" data-del="${esc(i.key)}" type="button">删除</button></div><div class="isub">${esc(i.location||"未知地点")} · ${esc(String(i.days||"-"))} 天</div><div class="isub">模板 ${t} · ${esc(tm)}</div><div class="isub">${esc(time)}</div></article>`;
-      }).join("");
-
-      hstrip.querySelectorAll(".item").forEach(node=>{
-        node.addEventListener("click",()=>{
-          hit();
-          const rec=items.find(i=>i.key===node.dataset.key);
-          if(!rec)return;
-          activeKey=rec.key;
-          renderHistory();
-          renderGuide(rec);
-        });
-        node.addEventListener("mouseenter",hit);
-      });
-
-      hstrip.querySelectorAll(".idel").forEach(btn=>btn.addEventListener("click",e=>{
+      $("hist-strip").querySelectorAll("[data-del]").forEach((b) => b.onclick = async (e) => {
         e.stopPropagation();
-        const key=btn.dataset.del||"";
-        if(key)delHistory(key);
-      }));
-    }
-
-    function renderGuide(rec){
-      if(!rec||!rec.content){empty();return;}
-      const c=rec.content;
-      const itinerary=Array.isArray(c.itinerary)?c.itinerary:[];
-      const budget=c.budget||{};
-      const tags=Array.isArray(c.tags)?c.tags:[];
-      const routes=normalizeRoutes(rec);
-      const t=tid(rec.templateId);
-      const cache=rec.source==="cache";
-
-      root.innerHTML=`<div class="guide"><div class="shell"><div class="ban reveal"><span class="badge">模板 ${t} · ${esc(T[t]?.n||"默认")}</span><span class="badge">${cache?"缓存命中":"新生成并入库"}</span></div><div class="layout"><section class="gcard reveal"><div class="tags"><span class="tag">${esc(rec.key)}</span><span class="tag">${esc(c.bestSeason||"四季皆宜")}</span><span class="tag">${esc(c.travelStyle||"自由行")}</span></div><h2 class="title">${esc(c.title||(rec.key+"旅游攻略"))}</h2><p class="sub">${esc(c.summary||"已生成旅游攻略。")}</p><div class="g2"><article class="mini reveal"><h4>出发前提醒</h4><p>${esc(c.prep||"建议提前确认天气、交通和预约信息。")}</p></article><article class="mini reveal"><h4>适合人群</h4><p>${esc(c.audience||"适合第一次去、想快速安排行程的人群。")}</p></article></div><div class="tags">${tags.length?tags.map(x=>`<span class="tag">${esc(x)}</span>`).join(""):"<span class='sub'>暂无标签</span>"}</div></section><section class="gcard reveal"><h3 style="margin:0 0 8px;">每日行程（点击高亮左侧路线）</h3><div class="days">${itinerary.map((d,i)=>`<article class="day itinerary-day reveal" data-day="${i+1}"><h4>Day ${i+1} · ${esc(d.theme||"行程安排")}</h4><div class="sch">${["morning","afternoon","evening"].map(k=>`<div class="slot"><strong>${k==="morning"?"上午":k==="afternoon"?"下午":"晚上"}</strong><div>${esc(d[k]||"自由活动")}</div></div>`).join("")}</div></article>`).join("")||"<div class='sub'>暂无详细行程</div>"}</div></section><section class="gcard reveal"><h3 style="margin:0 0 8px;">预算与建议</h3><div class="bud"><article class="mini reveal"><h4>交通</h4><strong>${esc(budget.transport||"-")}</strong></article><article class="mini reveal"><h4>住宿</h4><strong>${esc(budget.hotel||"-")}</strong></article><article class="mini reveal"><h4>餐饮</h4><strong>${esc(budget.food||"-")}</strong></article><article class="mini reveal"><h4>门票与杂费</h4><strong>${esc(budget.misc||"-")}</strong></article></div><div class="g2"><article class="mini reveal"><h4>必吃推荐</h4>${li(c.foods)}</article><article class="mini reveal"><h4>住宿建议</h4>${li(c.hotels)}</article><article class="mini reveal"><h4>贴士</h4>${li(c.tips)}</article></div></section></div></div></div>`;
-      currentRoutes=routes;
-      reveal();
-      const firstDay=routes[0]?.day||1;
-      setActiveRouteDay(firstDay);
-      root.querySelectorAll(".itinerary-day[data-day]").forEach(el=>{
-        el.addEventListener("click",()=>{
-          hit();
-          setActiveRouteDay(Number(el.dataset.day));
-        });
+        const id = b.dataset.del || "";
+        const pwd = prompt("请输入删除密码（DELETE_PASSWORD）");
+        if (pwd === null) return;
+        try {
+          setMsg("正在删除...");
+          const ret = await api(`/api/guides/${encodeURIComponent(id)}`, { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ password: pwd }) });
+          if (!ret.deleted) { await load(); setMsg("未删除到记录，已刷新。", true); return; }
+          S.items = S.items.filter((x) => (x.id || x.key) !== id);
+          const vv = visible();
+          S.activeId = vv[0] ? (vv[0].id || vv[0].key) : "";
+          renderLocStrip();
+          renderHistStrip();
+          renderCurrent();
+          setMsg("删除成功。");
+        } catch (err) { setMsg(err.message || "删除失败", true); }
       });
     }
 
-    async function j(url,opt){
-      const r=await fetch(url,opt);
-      const d=await r.json().catch(()=>({}));
-      if(!r.ok)throw new Error(d.error||"请求失败");
-      return d;
+    function normalizeRoutes(rec) {
+      const c = rec?.content || {};
+      const raw = Array.isArray(c.routes) ? c.routes : [];
+      const n = raw.map((r, i) => ({ day: Number(r?.day) || i + 1, title: String(r?.title || `Day ${i + 1}`), steps: Array.isArray(r?.steps) ? r.steps.filter((s) => s && s.from && s.to) : [] })).filter((r) => r.steps.length);
+      return n.length ? n : [{ day: 1, title: "Day 1", steps: [] }];
     }
 
-    async function load(){
-      try {
-        s("正在读取 MongoDB 历史...");
-        const d=await j("/api/guides");
-        items=Array.isArray(d.items)?d.items:[];
-        items.sort((a,b)=>new Date(b.updatedAt)-new Date(a.updatedAt));
-        if(!activeKey&&items.length)activeKey=items[0].key;
-        const active=items.find(i=>i.key===activeKey);
-        if(active)renderGuide(active);else empty();
-        renderHistory();
-        s(items.length?"历史已同步。":"暂无历史攻略。");
-      } catch (e) {
-        console.error(e);
-        s(e.message||"读取历史失败",1);
+    function spotCandidates(rec) {
+      const c = rec?.content || {};
+      if (Array.isArray(c.spots) && c.spots.length) {
+        return c.spots.map((s) => ({ name: String(s.name || "").trim(), note: String(s.note || ""), lat: Number(s.lat), lng: Number(s.lng) })).filter((s) => s.name);
+      }
+      const it = Array.isArray(c.itinerary) ? c.itinerary : [];
+      const out = [];
+      it.forEach((d, i) => ["morning", "afternoon", "evening"].forEach((k) => {
+        const n = String(d?.[k] || "").trim();
+        if (n) out.push({ name: n, note: `Day ${i + 1} ${k}`, lat: null, lng: null });
+      }));
+      return out.slice(0, 8);
+    }
+
+    async function resolveSpots(location, spots) {
+      const resolved = [];
+      for (const s of spots) {
+        if (Number.isFinite(s.lat) && Number.isFinite(s.lng)) { resolved.push(s); continue; }
+        const p = await geocodeOne(s.name, location);
+        if (p && Number.isFinite(p.lat) && Number.isFinite(p.lng)) resolved.push({ ...s, lat: p.lat, lng: p.lng });
+      }
+      if (!resolved.length && location) {
+        const center = await geocodeOne(location, "");
+        if (center && Number.isFinite(center.lat) && Number.isFinite(center.lng)) resolved.push({ name: location, note: "城市中心", lat: center.lat, lng: center.lng });
+      }
+      return resolved;
+    }
+
+    function resetMap() { if (S.map) { try { S.map.remove(); } catch {} } S.map = null; S.mapLayer = null; }
+
+    async function renderMap(rec) {
+      const el = $("map");
+      if (!el || !window.L) return;
+      const points = await resolveSpots(rec.location || "", spotCandidates(rec));
+      if (!points.length) { const tip = $("map-tip"); if (tip) tip.textContent = "未能获取地图坐标。"; return; }
+      if (!S.map) {
+        S.map = L.map("map");
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19, attribution: "&copy; OpenStreetMap" }).addTo(S.map);
+      }
+      if (S.mapLayer) S.map.removeLayer(S.mapLayer);
+      S.mapLayer = L.layerGroup().addTo(S.map);
+      const bounds = [];
+      points.forEach((p) => { L.marker([p.lat, p.lng]).bindPopup(`<strong>${esc(p.name)}</strong><br>${esc(p.note || "")}`).addTo(S.mapLayer); bounds.push([p.lat, p.lng]); });
+      if (bounds.length === 1) S.map.setView(bounds[0], 13);
+      else S.map.fitBounds(bounds, { padding: [22, 22] });
+      const tip = $("map-tip");
+      if (tip) tip.textContent = `已加载 ${points.length} 个坐标点。`;
+      setTimeout(() => S.map && S.map.invalidateSize(), 120);
+    }
+
+    function renderCoupon() {
+      if (!S.couponUrl) return "";
+      return `<section class="coupon"><div><strong>美团优惠</strong><div class="sub">可通过该链接下单酒店等产品</div></div><a href="${esc(S.couponUrl)}" target="_blank" rel="noopener noreferrer">立即使用优惠链接</a></section>`;
+    }
+
+    function renderTextList(items, emptyText) {
+      const list = Array.isArray(items) ? items.map((x) => String(x || "").trim()).filter(Boolean) : [];
+      if (!list.length) return `<div class="sub">${esc(emptyText || "暂无建议")}</div>`;
+      return `<ul class="tips-list">${list.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>`;
+    }
+
+    function renderSideRoutes(routes) {
+      const box = $("side-routes");
+      if (!box) return;
+      const arr = Array.isArray(routes) ? routes : [];
+      if (!arr.length) {
+        box.innerHTML = `<div class="sub">请选择一条历史攻略后查看路线。</div>`;
+        return;
+      }
+      box.innerHTML = arr.map((r) => `<article class="side-route-day" data-route-day="${esc(r.day)}"><b>Day ${esc(r.day)} · ${esc(r.title || "路线")}</b>${(Array.isArray(r.steps) && r.steps.length) ? r.steps.map((s, i) => `<div class="side-route-step">${i + 1}. ${esc(s.from)} → ${esc(s.to)} · ${esc(s.transport || "-")} ${s.duration ? `· ${esc(s.duration)}` : ""}</div>`).join("") : `<div class="side-route-step">暂无路线细节</div>`}</article>`).join("");
+      box.querySelectorAll("[data-route-day]").forEach((el) => {
+        el.onclick = () => setActiveRouteDay(Number(el.dataset.routeDay || "1"), true);
+      });
+    }
+
+    function setActiveRouteDay(day, scrollToMain) {
+      S.activeRouteDay = Number.isFinite(day) && day > 0 ? day : 1;
+      document.querySelectorAll(".side-route-day").forEach((el) => el.classList.toggle("active", Number(el.dataset.routeDay || "0") === S.activeRouteDay));
+      document.querySelectorAll(".itinerary-day").forEach((el) => el.classList.toggle("active", Number(el.dataset.day || "0") === S.activeRouteDay));
+      if (scrollToMain) {
+        const target = document.querySelector(`.itinerary-day[data-day="${S.activeRouteDay}"]`);
+        if (target) target.scrollIntoView({ behavior: "smooth", block: "center" });
       }
     }
 
-    async function delHistory(k){
-      hit();
-      const pwd=window.prompt("请输入删除密码（DELETE_PASSWORD）");
-      if(pwd===null)return;
-      try {
-        s("正在删除...");
-        const r=await j(`/api/guides/${encodeURIComponent(k)}`,{method:"DELETE",headers:{"Content-Type":"application/json"},body:JSON.stringify({password:pwd})});
-        if(!r.deleted){s("未找到可删除记录。",1);await load();return;}
-        items=items.filter(i=>i.key!==k);
-        if(activeKey===k){const f=filtered()[0]||items[0];activeKey=f?f.key:"";if(f)renderGuide(f);else empty();}
-        renderHistory();
-        s("删除成功。");
-      } catch (e) {
-        console.error(e);
-        s(e.message||"删除失败",1);
+    function bindGuideRouteLinkage() {
+      document.querySelectorAll(".itinerary-day").forEach((el) => {
+        el.onclick = () => setActiveRouteDay(Number(el.dataset.day || "1"), false);
+      });
+    }
+
+    function renderGuide(rec) {
+      resetMap();
+      const c = rec?.content || {};
+      const it = Array.isArray(c.itinerary) ? c.itinerary : [];
+      const rs = normalizeRoutes(rec);
+      const tags = Array.isArray(c.tags) ? c.tags : [];
+      const tips = Array.isArray(c.tips) ? c.tips : [];
+      const foods = Array.isArray(c.foods) ? c.foods : [];
+      const hotels = Array.isArray(c.hotels) ? c.hotels : [];
+      const b = c.budget || {};
+      const src = rec.source === "cache" ? "缓存命中" : "新生成";
+
+      $("root").innerHTML = `<div class="main">
+        ${renderCoupon()}
+        <div class="chips"><span class="chip">${esc(rec.key || "-")}</span><span class="chip">${esc(rec.location || "-")} · ${esc(rec.days)} 天</span><span class="chip">${src}</span><span class="chip">模板 ${esc(rec.templateId || "-")}</span></div>
+        <section class="section">
+          <h3>${esc(c.title || "旅游攻略")}</h3>
+          <div class="sub">${esc(c.summary || "暂无摘要")}</div>
+          <div class="chips">${tags.length ? tags.map((t) => `<span class="chip">${esc(t)}</span>`).join("") : "<span class='sub'>暂无标签</span>"}</div>
+          <div class="overview-grid"><article class="overview-card"><h4>适合人群</h4><div class="sub">${esc(c.audience || "亲子、朋友出游、周末轻度旅行")}</div></article><article class="overview-card"><h4>出发建议</h4><div class="sub">${esc(c.departureAdvice || "建议上午出发，先安排行李寄存和首站打卡。")}</div></article></div>
+        </section>
+        <section class="section">
+          <h3>每日行程</h3>
+          ${it.length ? it.map((d, i) => `<article class="day itinerary-day" data-day="${i + 1}"><b>Day ${i + 1} · ${esc(d.theme || "行程安排")}</b><div class="slot"><b>上午</b>：${esc(d.morning || "自由活动")}</div><div class="slot"><b>下午</b>：${esc(d.afternoon || "自由活动")}</div><div class="slot"><b>晚上</b>：${esc(d.evening || "自由活动")}</div></article>`).join("") : "<div class='sub'>暂无详细行程</div>"}
+        </section>
+        <section class="section">
+          <h3>预算与建议</h3>
+          <div class="budget-grid"><article class="budget-item"><b>交通</b><div class="sub">${esc(b.transport || "-")}</div></article><article class="budget-item"><b>住宿</b><div class="sub">${esc(b.hotel || "-")}</div></article><article class="budget-item"><b>餐饮</b><div class="sub">${esc(b.food || "-")}</div></article><article class="budget-item"><b>杂费</b><div class="sub">${esc(b.misc || "-")}</div></article></div>
+          <div class="tips-grid"><article class="tips-box"><h4>吃吃喝喝</h4>${renderTextList(foods, "暂无餐饮建议")}</article><article class="tips-box"><h4>住宿建议</h4>${renderTextList(hotels, "暂无住宿建议")}</article><article class="tips-box"><h4>贴士</h4>${renderTextList(tips, "暂无补充贴士")}</article><article class="tips-box"><h4>备注</h4><div class="sub">价格已优先参考历史记录，尽量避免过高预算。</div></article></div>
+        </section>
+        <section class="section"><h3>景点地图</h3><div id="map"></div><div id="map-tip" class="sub">正在加载地图坐标...</div></section>
+      </div>`;
+
+      renderSideRoutes(rs);
+      bindGuideRouteLinkage();
+      setActiveRouteDay(rs[0]?.day || 1, false);
+      renderMap(rec);
+    }
+
+    function renderSummary() {
+      const now = Date.now();
+      const src = S.winDays > 0 ? S.items.filter((it) => { const ts = Date.parse(it.updatedAt || it.createdAt || ""); return Number.isFinite(ts) && now - ts <= S.winDays * 86400000; }) : S.items;
+      const cLoc = new Map(), cDays = new Map(), cTag = new Map();
+      src.forEach((it) => {
+        const loc = String(it.location || "").trim();
+        if (loc) cLoc.set(loc, (cLoc.get(loc) || 0) + 1);
+        const d = Number(it.days) || 0;
+        if (d > 0) cDays.set(`${d}天`, (cDays.get(`${d}天`) || 0) + 1);
+        const ct = it.content || {};
+        (Array.isArray(ct.tags) ? ct.tags : []).forEach((t) => { t = String(t || "").trim(); if (t) cTag.set(t, (cTag.get(t) || 0) + 1); });
+      });
+      $("root").innerHTML = `<div class="main">${renderCoupon()}<section class="filters"><button class="filter${S.winDays === 0 ? " active" : ""}" data-w="0">全部</button><button class="filter${S.winDays === 7 ? " active" : ""}" data-w="7">最近 7 天</button><button class="filter${S.winDays === 30 ? " active" : ""}" data-w="30">最近 30 天</button></section><section class="summary-grid"><article class="summary-card"><h3>好玩地点热度</h3><div id="c-loc" class="chart"></div></article><article class="summary-card"><h3>天数偏好</h3><div id="c-days" class="chart"></div></article><article class="summary-card"><h3>热门玩法标签</h3><div id="c-tags" class="chart"></div></article><article class="summary-card"><h3>总体统计</h3><div class="summary-stat"><div>统计样本：${src.length} 条</div><div>历史总记录：${S.items.length} 条</div><div>不同地点：${cLoc.size} 个</div><div>不同标签：${cTag.size} 个</div></div></article></section></div>`;
+      $("root").querySelectorAll("[data-w]").forEach((b) => b.onclick = () => { S.winDays = Number(b.dataset.w || "0") || 0; renderSummary(); });
+      disposeCharts();
+      pie("c-loc", topN(cLoc, 10));
+      bar("c-days", topN(cDays, 10), "#5e8ea1");
+      bar("c-tags", topN(cTag, 10), "#c96f4b");
+    }
+
+    function renderCurrent() {
+      $("tab-guides").classList.toggle("active", S.route === "guides");
+      $("tab-summary").classList.toggle("active", S.route === "status");
+      $("content").classList.toggle("summary-mode", S.route === "status");
+      if (S.route === "status") {
+        resetMap();
+        renderSideRoutes([]);
+        renderSummary();
+        return;
+      }
+      disposeCharts();
+      const a = S.items.find((x) => (x.id || x.key) === S.activeId);
+      if (a) renderGuide(a);
+      else {
+        renderSideRoutes([]);
+        $("root").innerHTML = `<div class="sub">请选择历史记录，或者先生成一条新的攻略。</div>`;
       }
     }
 
-    async function submitGuide(ev){
-      ev.preventDefault();
-      hit();
-      const location=locationEl.value.trim();
-      const days=Number(daysEl.value);
-      if(!location){s("请先输入旅游地点。",1);locationEl.focus();return;}
-      submit.disabled=true;
-      s("正在生成攻略，命中缓存会直接返回...");
+    function applyHash() {
+      S.route = String(window.location.hash || "").toLowerCase() === "#/status" ? "status" : "guides";
+      renderCurrent();
+    }
+
+    async function loadConfig() {
+      try { const d = await api("/api/config"); S.couponUrl = String(d.couponUrl || "").trim(); }
+      catch { S.couponUrl = ""; }
+    }
+
+    async function load() {
       try {
-        const d=await j("/api/guides",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({location,days})});
-        const rec=d.item;
-        activeKey=rec.key;
-        const idx=items.findIndex(i=>i.key===rec.key);
-        if(idx>=0)items.splice(idx,1,rec);else items.unshift(rec);
-        items.sort((a,b)=>new Date(b.updatedAt)-new Date(a.updatedAt));
-        renderHistory();
+        setMsg("正在加载历史...");
+        const d = await api("/api/guides");
+        S.items = (Array.isArray(d.items) ? d.items : []).map((x) => ({ ...x, id: x.id || x.key })).sort((a, b) => new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0));
+        if (!S.activeId && S.items.length) S.activeId = S.items[0].id || S.items[0].key;
+        renderLocStrip();
+        renderHistStrip();
+        renderCurrent();
+        setMsg(S.items.length ? "历史加载完成。" : "暂无历史记录。");
+      } catch (err) { setMsg(err.message || "加载失败", true); }
+    }
+
+    async function generateGuide(forceRefresh) {
+      let location = $("location").value.trim();
+      let days = Number($("days").value);
+      const useCache = forceRefresh ? false : Boolean($("use-cache").checked);
+      if ((!location || !Number.isInteger(days)) && forceRefresh) {
+        const selected = S.items.find((x) => (x.id || x.key) === S.activeId);
+        if (selected) {
+          location = String(selected.location || "").trim();
+          days = Number(selected.days);
+          if (location) $("location").value = location;
+          if (Number.isInteger(days) && days >= 1 && days <= 14) $("days").value = String(days);
+        }
+      }
+      if (!location) { setMsg("请先输入地点，或先选中一条历史记录。", true); $("location").focus(); return; }
+      if (!Number.isInteger(days) || days < 1 || days > 14) { setMsg("天数需为 1-14 的整数。", true); return; }
+      $("submit").disabled = true;
+      $("regenerate").disabled = true;
+      try {
+        setMsg(forceRefresh ? "正在重新生成（已跳过缓存）..." : (useCache ? "正在生成（会先尝试缓存命中）..." : "正在直接生成（已跳过缓存）..."));
+        const d = await api("/api/guides", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ location, days, useCache }) });
+        const rec = { ...d.item, id: d.item.id || d.item.key };
+        S.items = S.items.filter((x) => (x.id || x.key) !== (rec.id || rec.key));
+        S.items.unshift(rec);
+        S.items.sort((a, b) => new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0));
+        S.activeId = rec.id || rec.key;
+        S.activeLoc = "all";
+        renderLocStrip();
+        renderHistStrip();
+        if (S.route !== "guides") window.location.hash = "#/guides";
         renderGuide(rec);
-        s(d.cached?`命中缓存，沿用模板 ${tid(rec.templateId)}。`:`已生成并入库，随机模板 ${tid(rec.templateId)} 已固定。`);
-      } catch (e) {
-        console.error(e);
-        s(e.message||"生成失败",1);
+        if (forceRefresh) setMsg("已重新生成并保存。");
+        else setMsg(d.cached ? "缓存命中，已打开历史记录。" : "已重新生成并保存。");
+      } catch (err) {
+        setMsg(err.message || "生成失败", true);
       } finally {
-        submit.disabled=false;
+        $("submit").disabled = false;
+        $("regenerate").disabled = false;
       }
     }
 
-    function bindRightScrollHideTop(){
-      scroll.addEventListener("scroll",()=>{
-        const t=scroll.scrollTop;
-        const down=t>lastTop;
-        const far=t>36;
-        if(down&&far){navHidden=true;nav.classList.add("hidden");}
-        else{navHidden=false;nav.classList.remove("hidden");}
-        lastTop=t;
-      },{passive:true});
-    }
+    $("submit").onclick = () => generateGuide(false);
+    $("regenerate").onclick = () => generateGuide(true);
+    $("reload").onclick = load;
+    $("search").oninput = () => { S.q = $("search").value || ""; renderHistStrip(); };
+    window.addEventListener("hashchange", applyHash);
+    window.addEventListener("resize", () => { S.charts.forEach((c) => { try { c.resize(); } catch {} }); if (S.map) { try { S.map.invalidateSize(); } catch {} } });
 
-    form.addEventListener("submit",submitGuide);
-    refresh.addEventListener("click",()=>{hit();load();});
-    hsearch.addEventListener("input",()=>{hit();q=hsearch.value||"";renderHistory();});
-    htoggle.addEventListener("click",()=>{hit();collapsed=!collapsed;syncCollapse();});
-    document.addEventListener("visibilitychange",()=>{if(!document.hidden)hit();});
-
-    bindRightScrollHideTop();
-    syncCollapse();
-    startAuto();
-    load();
+    (async () => {
+      await loadConfig();
+      applyHash();
+      await load();
+    })();
   </script>
 </body>
 </html>
