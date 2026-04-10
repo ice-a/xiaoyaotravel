@@ -16,18 +16,108 @@ const TEMPLATE_COUNT = 10;
 
 const POSTGRES_URL = readEnv(["POSTGRES_URL", "DATABASE_URL", "NEON_DATABASE_URL", "postgres_url", "database_url"]);
 const DELETE_PASSWORD = readEnv(["DELETE_PASSWORD", "delete_password"]);
-const COUPON_URL = readEnv(["COUPON_URL", "MEITUAN_COUPON_URL", "coupon_url", "meituan_coupon_url"]);
+const PROMOTIONS_JSON = readEnv(["PROMOTIONS_JSON", "promotions_json"]);
 const GEOCODE_USER_AGENT = readEnv(["GEOCODE_USER_AGENT", "geocode_user_agent"]) || "travel-guide-app/1.0";
 
 let pgPool;
 let dbReadyPromise;
 
+const TEXT = {
+  unknownError: "未知错误",
+  missingPostgres: "缺少 POSTGRES_URL（或 DATABASE_URL）。",
+  missingModelEnv: "缺少模型环境变量：baseurl、apikey、modelname。",
+  modelEmpty: "模型返回了空内容。",
+  modelRequestFailed: "模型请求失败。",
+  geocodeQueryEmpty: "q 不能为空。",
+  locationEmpty: "location 不能为空。",
+  daysInvalid: "days 必须是 1 到 14 之间的整数。",
+  idEmpty: "id 不能为空。",
+  apiRouteNotFound: "API 路由不存在。",
+  deletePasswordNotConfigured: "服务端未配置删除密码。",
+  deletePasswordRequired: "删除操作需要密码。",
+  deletePasswordInvalid: "删除密码错误。",
+  internalServerError: "服务器内部错误。",
+  notFound: "Not Found",
+  transportWalk: "步行",
+  transportMetroBus: "地铁/公交",
+  transportMetroWalk: "地铁/步行",
+  transportWalkMetro: "步行/地铁",
+  noteCheckIn: "先办理入住",
+  cityCenter: "城市中心",
+  routeTitle: ({ day }) => `第 ${day} 天交通路线`,
+  dayTitle: ({ day }) => `第 ${day} 天`,
+  hotelName: ({ location }) => `${location}酒店`,
+  stationName: ({ location }) => `${location}高铁站`,
+  coreSpot: ({ location }) => `${location}核心景点`,
+  landmarkDistrict: ({ location }) => `${location}地标片区`,
+  nightArea: ({ location }) => `${location}夜游片区`,
+  duration40min: "40分钟",
+  duration25min: "25分钟",
+  duration20min: "20分钟",
+  duration30min: "30分钟",
+  aroundPriceRange: ({ lo, hi }) => `约${lo}-${hi}元`,
+  guideTitle: ({ location, days }) => `${location}${days}天旅游攻略`,
+  guideSummary: ({ location, days }) => `${location}${days}天行程建议`,
+  bestSeason: "四季皆宜",
+  travelStyle: "自由行",
+  prep: ({ location }) => `出发前建议确认 ${location} 的天气、交通和预约要求。`,
+  audience: "适合第一次去、想快速做计划的游客。",
+  departureAdvice: "建议早上出发，尽早处理行李和第一站安排。",
+  systemPrompt: "你是旅行规划师，只返回严格 JSON。",
+  promptIntro: "你是专业旅游规划师，请生成可执行、预算友好的旅游攻略。",
+  promptLocation: ({ location }) => `地点：${location}`,
+  promptDays: ({ days }) => `天数：${days}天`,
+  promptBudget: ({ budgetHint }) => `预算限制（优先参考历史价格，避免高价）：${budgetHint}`,
+  promptBudgetLineTransport: ({ value }) => `transport 建议不超过 ${value} 元`,
+  promptBudgetLineHotel: ({ value }) => `hotel 建议不超过 ${value} 元`,
+  promptBudgetLineFood: ({ value }) => `food 建议不超过 ${value} 元`,
+  promptBudgetLineMisc: ({ value }) => `misc 建议不超过 ${value} 元`,
+  promptEconomy: "请尽量给经济/中档方案，不要推荐昂贵酒店。",
+  promptReferenceSpots: ({ spots }) => `用户提供了以下参考景点（仅供参考，若景点不存在或距目的地太远请忽略）：${spots}`,
+  promptJsonOnly: "只返回严格 JSON，不要 Markdown。",
+  startupLog: ({ port }) => `旅游攻略应用已启动：http://localhost:${port}`,
+};
+
+function text(key, params) {
+  const value = TEXT[key] ?? key;
+  return typeof value === "function" ? value(params || {}) : value;
+}
+
 function readEnv(keys) {
   for (const key of keys) {
-    const v = process.env[key];
-    if (v) return v;
+    const value = process.env[key];
+    if (value) return value;
   }
   return "";
+}
+
+function parsePromotions(value) {
+  if (!value) return [];
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function buildPromotions() {
+  const promotions = [];
+  const pushPromo = (promo) => {
+    const url = String(promo?.url || "").trim();
+    if (!url) return;
+    promotions.push({
+      id: String(promo?.id || `promo-${promotions.length + 1}`),
+      title: String(promo?.title || "").trim(),
+      subtitle: String(promo?.subtitle || "").trim(),
+      url,
+      ctaText: String(promo?.ctaText || "").trim(),
+    });
+  };
+
+  parsePromotions(PROMOTIONS_JSON).forEach(pushPromo);
+
+  return promotions;
 }
 
 function sendJson(res, statusCode, payload) {
@@ -40,21 +130,42 @@ function sendText(res, statusCode, payload, contentType) {
   res.end(payload);
 }
 
+function getContentType(filePath) {
+  switch (path.extname(filePath).toLowerCase()) {
+    case ".html": return "text/html; charset=utf-8";
+    case ".js": return "application/javascript; charset=utf-8";
+    case ".mjs": return "application/javascript; charset=utf-8";
+    case ".css": return "text/css; charset=utf-8";
+    case ".json": return "application/json; charset=utf-8";
+    case ".txt": return "text/plain; charset=utf-8";
+    case ".svg": return "image/svg+xml";
+    case ".png": return "image/png";
+    case ".jpg":
+    case ".jpeg": return "image/jpeg";
+    case ".gif": return "image/gif";
+    case ".webp": return "image/webp";
+    case ".ico": return "image/x-icon";
+    case ".map": return "application/json; charset=utf-8";
+    default: return "application/octet-stream";
+  }
+}
+
 function toErrorMessage(error) {
-  if (!error) return "Unknown error";
-  const msg = error.message || String(error);
+  if (!error) return text("unknownError");
+  const message = error.message || String(error);
   const cause = error.cause;
-  if (!cause || typeof cause !== "object") return msg;
+  if (!cause || typeof cause !== "object") return message;
+
   const parts = [];
   if (cause.code) parts.push(`code=${cause.code}`);
   if (cause.errno) parts.push(`errno=${cause.errno}`);
   if (cause.address) parts.push(`address=${cause.address}`);
   if (cause.port) parts.push(`port=${cause.port}`);
-  return parts.length ? `${msg} (${parts.join(", ")})` : msg;
+  return parts.length ? `${message} (${parts.join(", ")})` : message;
 }
 
 function buildKey(location, days) {
-  return `${location}-${days}天`;
+  return `${String(location || "").trim()}::${Number(days)}`;
 }
 
 function buildGuideId() {
@@ -62,10 +173,10 @@ function buildGuideId() {
   return `g_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`;
 }
 
-function parseTemplateId(v) {
-  const n = Number(v);
-  if (!Number.isInteger(n) || n < 1 || n > TEMPLATE_COUNT) return null;
-  return n;
+function parseTemplateId(value) {
+  const numeric = Number(value);
+  if (!Number.isInteger(numeric) || numeric < 1 || numeric > TEMPLATE_COUNT) return null;
+  return numeric;
 }
 
 function randomTemplateId() {
@@ -74,7 +185,9 @@ function randomTemplateId() {
 
 function stableTemplateIdByKey(key) {
   let hash = 0;
-  for (let i = 0; i < key.length; i += 1) hash = (hash * 31 + key.charCodeAt(i)) >>> 0;
+  for (let index = 0; index < key.length; index += 1) {
+    hash = (hash * 31 + key.charCodeAt(index)) >>> 0;
+  }
   return (hash % TEMPLATE_COUNT) + 1;
 }
 
@@ -86,45 +199,55 @@ function normalizeRouteStep(step) {
   return {
     from,
     to,
-    transport: String(step.transport || "步行").trim(),
+    transport: String(step.transport || text("transportWalk")).trim(),
     line: String(step.line || "").trim(),
     duration: String(step.duration || "").trim(),
-    note: String(step.note || "").trim()
+    note: String(step.note || "").trim(),
   };
 }
 
 function fallbackRoutes(location, itinerary, days) {
   const base = Array.isArray(itinerary) ? itinerary : [];
-  return Array.from({ length: days }).map((_, i) => {
-    const day = base[i] || {};
-    const idx = i + 1;
-    const hotel = `${location}酒店`;
+  return Array.from({ length: days }).map((_, index) => {
+    const dayData = base[index] || {};
+    const day = index + 1;
+    const hotel = text("hotelName", { location });
+    const morning = String(dayData.morning || text("coreSpot", { location })).trim();
+    const afternoon = String(dayData.afternoon || text("landmarkDistrict", { location })).trim();
+    const evening = String(dayData.evening || text("nightArea", { location })).trim();
+
     return {
-      day: idx,
-      title: String(day.theme || `Day ${idx} 交通路线`).trim(),
+      day,
+      title: String(dayData.theme || text("routeTitle", { day })).trim(),
       steps: [
-        { from: `${location}高铁站`, to: hotel, transport: "地铁/公交", line: "", duration: "40分钟", note: "先办理入住" },
-        { from: hotel, to: String(day.morning || `${location}核心景点`).trim(), transport: "地铁/步行", line: "", duration: "25分钟", note: "" },
-        { from: String(day.morning || `${location}核心景点`).trim(), to: String(day.afternoon || `${location}地标街区`).trim(), transport: "地铁/公交", line: "", duration: "20分钟", note: "" },
-        { from: String(day.afternoon || `${location}地标街区`).trim(), to: String(day.evening || `${location}夜游区`).trim(), transport: "步行/地铁", line: "", duration: "20分钟", note: "" },
-        { from: String(day.evening || `${location}夜游区`).trim(), to: hotel, transport: "地铁/步行", line: "", duration: "30分钟", note: "" }
-      ]
+        { from: text("stationName", { location }), to: hotel, transport: text("transportMetroBus"), line: "", duration: text("duration40min"), note: text("noteCheckIn") },
+        { from: hotel, to: morning, transport: text("transportMetroWalk"), line: "", duration: text("duration25min"), note: "" },
+        { from: morning, to: afternoon, transport: text("transportMetroBus"), line: "", duration: text("duration20min"), note: "" },
+        { from: afternoon, to: evening, transport: text("transportWalkMetro"), line: "", duration: text("duration20min"), note: "" },
+        { from: evening, to: hotel, transport: text("transportMetroWalk"), line: "", duration: text("duration30min"), note: "" },
+      ],
     };
   });
 }
 
 function normalizeRoutes(rawRoutes, location, itinerary, days) {
   if (!Array.isArray(rawRoutes) || !rawRoutes.length) return fallbackRoutes(location, itinerary, days);
+
   const normalized = rawRoutes
-    .map((route, i) => {
+    .map((route, index) => {
       if (!route || typeof route !== "object") return null;
-      const day = Number(route.day) || i + 1;
-      const steps = Array.isArray(route.steps) ? route.steps.map(normalizeRouteStep).filter(Boolean) : [];
+      const day = Number(route.day) || index + 1;
+      const steps = Array.isArray(route.steps) ? route.steps.map((step) => normalizeRouteStep(step)).filter(Boolean) : [];
       if (!steps.length) return null;
-      return { day, title: String(route.title || `Day ${day} 交通路线`).trim(), steps };
+      return {
+        day,
+        title: String(route.title || text("routeTitle", { day })).trim(),
+        steps,
+      };
     })
     .filter(Boolean)
     .slice(0, days);
+
   return normalized.length ? normalized : fallbackRoutes(location, itinerary, days);
 }
 
@@ -135,6 +258,7 @@ function normalizeSpots(spots) {
       if (!spot || typeof spot !== "object") return null;
       const name = String(spot.name || "").trim();
       if (!name) return null;
+
       const lat = Number(spot.lat);
       const lng = Number(spot.lng);
       return {
@@ -142,7 +266,7 @@ function normalizeSpots(spots) {
         day: Number(spot.day) || null,
         note: String(spot.note || "").trim(),
         lat: Number.isFinite(lat) ? lat : null,
-        lng: Number.isFinite(lng) ? lng : null
+        lng: Number.isFinite(lng) ? lng : null,
       };
     })
     .filter(Boolean)
@@ -153,44 +277,47 @@ function normalizeBudgetText(value) {
   return String(value || "").trim() || "-";
 }
 
-function parsePriceMax(text) {
-  const raw = String(text || "").toLowerCase();
+function parsePriceMax(textValue) {
+  const raw = String(textValue || "").toLowerCase();
   if (!raw) return null;
-  const nums = [];
-  const re = /(\d+(?:\.\d+)?)\s*(w|万|k|千)?/g;
-  let m;
-  while ((m = re.exec(raw))) {
-    let n = Number(m[1]);
-    const unit = m[2];
-    if (unit === "w" || unit === "万") n *= 10000;
-    else if (unit === "k" || unit === "千") n *= 1000;
-    if (Number.isFinite(n)) nums.push(n);
+
+  const matches = [];
+  const pattern = /(\d+(?:\.\d+)?)\s*(w|万|k|千)?/g;
+  let match;
+  while ((match = pattern.exec(raw))) {
+    let numeric = Number(match[1]);
+    const unit = match[2];
+    if (unit === "w" || unit === "万") numeric *= 10000;
+    else if (unit === "k" || unit === "千") numeric *= 1000;
+    if (Number.isFinite(numeric)) matches.push(numeric);
   }
-  if (!nums.length) return null;
-  return Math.max(...nums);
+
+  if (!matches.length) return null;
+  return Math.max(...matches);
 }
 
 function toAffordableRange(cap) {
-  const hi = Math.max(150, Math.round(cap / 10) * 10);
-  const lo = Math.max(80, Math.round((hi * 0.65) / 10) * 10);
-  return `约${lo}-${hi}元`;
+  const high = Math.max(150, Math.round(cap / 10) * 10);
+  const low = Math.max(80, Math.round((high * 0.65) / 10) * 10);
+  return text("aroundPriceRange", { lo: low, hi: high });
 }
 
 function applyBudgetCaps(budget, caps) {
-  const out = { ...budget };
-  for (const k of ["transport", "hotel", "food", "misc"]) {
-    const cap = Number(caps?.[k]);
-    const text = normalizeBudgetText(out[k]);
+  const output = { ...budget };
+  for (const key of ["transport", "hotel", "food", "misc"]) {
+    const cap = Number(caps?.[key]);
+    const textValue = normalizeBudgetText(output[key]);
     if (!Number.isFinite(cap) || cap <= 0) {
-      out[k] = text;
+      output[key] = textValue;
       continue;
     }
-    const parsed = parsePriceMax(text);
-    if (parsed && parsed > cap * 1.25) out[k] = toAffordableRange(cap);
-    else if (text === "-" || !text) out[k] = toAffordableRange(cap);
-    else out[k] = text;
+
+    const parsed = parsePriceMax(textValue);
+    if (parsed && parsed > cap * 1.25) output[key] = toAffordableRange(cap);
+    else if (textValue === "-" || !textValue) output[key] = toAffordableRange(cap);
+    else output[key] = textValue;
   }
-  return out;
+  return output;
 }
 
 async function readBody(req) {
@@ -201,13 +328,12 @@ async function readBody(req) {
 }
 
 async function getPool() {
-  if (!POSTGRES_URL) throw new Error("Missing POSTGRES_URL (or DATABASE_URL).");
+  if (!POSTGRES_URL) throw new Error(text("missingPostgres"));
+
   if (!pgPool) {
-    pgPool = new Pool({
-      connectionString: POSTGRES_URL,
-      ssl: { rejectUnauthorized: false }
-    });
+    pgPool = new Pool({ connectionString: POSTGRES_URL, ssl: { rejectUnauthorized: false } });
   }
+
   if (!dbReadyPromise) {
     dbReadyPromise = (async () => {
       await pgPool.query(`
@@ -216,7 +342,7 @@ async function getPool() {
           cache_key TEXT NOT NULL,
           location TEXT NOT NULL,
           days INTEGER NOT NULL,
-          template_id INTEGER NOT NULL,
+          template_id INTEGER,
           title TEXT NOT NULL,
           content JSONB NOT NULL,
           created_at TIMESTAMPTZ NOT NULL,
@@ -228,6 +354,7 @@ async function getPool() {
       await pgPool.query(`CREATE INDEX IF NOT EXISTS idx_guides_updated_at ON guides (updated_at DESC);`);
     })();
   }
+
   await dbReadyPromise;
   return pgPool;
 }
@@ -249,6 +376,7 @@ async function getBudgetGuidance(pool, location) {
         [location]
       );
     }
+
     return pool.query(
       `
         SELECT content->'budget'->>'transport' AS transport,
@@ -268,25 +396,24 @@ async function getBudgetGuidance(pool, location) {
   const samples = { transport: [], hotel: [], food: [], misc: [] };
   for (const row of rows) {
     for (const key of Object.keys(samples)) {
-      const n = parsePriceMax(row[key]);
-      if (Number.isFinite(n)) samples[key].push(n);
+      const numeric = parsePriceMax(row[key]);
+      if (Number.isFinite(numeric)) samples[key].push(numeric);
     }
   }
 
-  function percentile(arr, p) {
-    if (!arr.length) return null;
-    const s = [...arr].sort((a, b) => a - b);
-    const idx = Math.min(s.length - 1, Math.max(0, Math.floor((s.length - 1) * p)));
-    return s[idx];
+  function percentile(values, ratio) {
+    if (!values.length) return null;
+    const sorted = [...values].sort((left, right) => left - right);
+    const index = Math.min(sorted.length - 1, Math.max(0, Math.floor((sorted.length - 1) * ratio)));
+    return sorted[index];
   }
 
-  const caps = {
+  return {
     transport: percentile(samples.transport, 0.5) || 500,
     hotel: percentile(samples.hotel, 0.5) || 600,
     food: percentile(samples.food, 0.5) || 220,
-    misc: percentile(samples.misc, 0.5) || 260
+    misc: percentile(samples.misc, 0.5) || 260,
   };
-  return caps;
 }
 
 function normalizeGuidePayload(payload, location, days, caps) {
@@ -298,18 +425,19 @@ function normalizeGuidePayload(payload, location, days, caps) {
       transport: normalizeBudgetText(payload.budget?.transport),
       hotel: normalizeBudgetText(payload.budget?.hotel),
       food: normalizeBudgetText(payload.budget?.food),
-      misc: normalizeBudgetText(payload.budget?.misc)
+      misc: normalizeBudgetText(payload.budget?.misc),
     },
     caps
   );
 
   return {
-    title: payload.title || `${location}${days}天旅游攻略`,
-    summary: payload.summary || `${location} ${days} 天行程建议`,
-    bestSeason: payload.bestSeason || "四季皆宜",
-    travelStyle: payload.travelStyle || "自由行",
-    prep: payload.prep || `出发前请确认 ${location} 的天气、交通和预约信息。`,
-    audience: payload.audience || "适合第一次去、想快速安排行程的人群。",
+    title: payload.title || text("guideTitle", { location, days }),
+    summary: payload.summary || text("guideSummary", { location, days }),
+    bestSeason: payload.bestSeason || text("bestSeason"),
+    travelStyle: payload.travelStyle || text("travelStyle"),
+    prep: payload.prep || text("prep", { location }),
+    audience: payload.audience || text("audience"),
+    departureAdvice: payload.departureAdvice || text("departureAdvice"),
     tags: Array.isArray(payload.tags) ? payload.tags.slice(0, 8) : [],
     foods: Array.isArray(payload.foods) ? payload.foods.slice(0, 6) : [],
     hotels: Array.isArray(payload.hotels) ? payload.hotels.slice(0, 6) : [],
@@ -317,37 +445,41 @@ function normalizeGuidePayload(payload, location, days, caps) {
     routes,
     spots,
     budget,
-    tips: Array.isArray(payload.tips) ? payload.tips.slice(0, 8) : []
+    tips: Array.isArray(payload.tips) ? payload.tips.slice(0, 8) : [],
   };
 }
 
-function extractJson(text) {
-  const trimmed = String(text || "").trim();
-  if (!trimmed) throw new Error("Model returned empty content.");
+function extractJson(textValue) {
+  const trimmed = String(textValue || "").trim();
+  if (!trimmed) throw new Error(text("modelEmpty"));
   const fenced = trimmed.match(/```json\s*([\s\S]*?)```/i);
   return JSON.parse(fenced ? fenced[1] : trimmed);
 }
 
-async function generateGuide(location, days, budgetCaps) {
-  const baseUrl = (readEnv(["OPENAI_BASEURL", "baseurl"]) || "").replace(/\/+$/, "");
-  const apiKey = readEnv(["OPENAI_APIKEY", "apikey"]);
-  const modelName = readEnv(["OPENAI_MODELNAME", "modelname"]);
-  if (!baseUrl || !apiKey || !modelName) throw new Error("Missing model env vars: baseurl, apikey, modelname.");
-
+function buildPrompt(location, days, budgetCaps, referenceSpots) {
   const budgetHint = [
-    `transport 建议不超过 ${Math.round(budgetCaps.transport)} 元`,
-    `hotel 建议不超过 ${Math.round(budgetCaps.hotel)} 元`,
-    `food 建议不超过 ${Math.round(budgetCaps.food)} 元`,
-    `misc 建议不超过 ${Math.round(budgetCaps.misc)} 元`
+    text("promptBudgetLineTransport", { value: Math.round(budgetCaps.transport) }),
+    text("promptBudgetLineHotel", { value: Math.round(budgetCaps.hotel) }),
+    text("promptBudgetLineFood", { value: Math.round(budgetCaps.food) }),
+    text("promptBudgetLineMisc", { value: Math.round(budgetCaps.misc) }),
   ].join("，");
 
-  const prompt = [
-    "你是专业旅行策划师。请输出可执行、预算友好的旅游攻略。",
-    `地点：${location}`,
-    `天数：${days}天`,
-    `预算限制（优先参考历史价格，避免高价）：${budgetHint}`,
-    "请尽量给经济/中档方案，不要推荐昂贵酒店。",
-    "只返回严格 JSON，不要 Markdown。",
+  const validSpots = Array.isArray(referenceSpots)
+    ? referenceSpots.map((spot) => String(spot || "").trim()).filter(Boolean).slice(0, 8)
+    : [];
+
+  const spotsLine = validSpots.length
+    ? text("promptReferenceSpots", { spots: validSpots.join("、") })
+    : null;
+
+  return [
+    text("promptIntro"),
+    text("promptLocation", { location }),
+    text("promptDays", { days }),
+    text("promptBudget", { budgetHint }),
+    spotsLine,
+    text("promptEconomy"),
+    text("promptJsonOnly"),
     "{",
     '  "title": "string",',
     '  "summary": "string",',
@@ -355,6 +487,7 @@ async function generateGuide(location, days, budgetCaps) {
     '  "travelStyle": "string",',
     '  "prep": "string",',
     '  "audience": "string",',
+    '  "departureAdvice": "string",',
     '  "tags": ["string"],',
     '  "foods": ["string"],',
     '  "hotels": ["string"],',
@@ -363,8 +496,17 @@ async function generateGuide(location, days, budgetCaps) {
     '  "spots": [{ "name": "string", "day": 1, "note": "string", "lat": 0, "lng": 0 }],',
     '  "budget": { "transport": "string", "hotel": "string", "food": "string", "misc": "string" },',
     '  "tips": ["string"]',
-    "}"
-  ].join("\n");
+    "}",
+  ].filter(Boolean).join("\n");
+}
+
+async function generateGuide(location, days, budgetCaps, referenceSpots) {
+  const baseUrl = (readEnv(["OPENAI_BASEURL", "baseurl"]) || "").replace(/\/+$/, "");
+  const apiKey = readEnv(["OPENAI_APIKEY", "apikey"]);
+  const modelName = readEnv(["OPENAI_MODELNAME", "modelname"]);
+  if (!baseUrl || !apiKey || !modelName) throw new Error(text("missingModelEnv"));
+
+  const prompt = buildPrompt(location, days, budgetCaps, referenceSpots);
 
   let response;
   try {
@@ -372,23 +514,23 @@ async function generateGuide(location, days, budgetCaps) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`
+        Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
         model: modelName,
         temperature: 0.45,
         messages: [
-          { role: "system", content: "You are a travel planner. Return strict JSON only." },
-          { role: "user", content: prompt }
-        ]
-      })
+          { role: "system", content: text("systemPrompt") },
+          { role: "user", content: prompt },
+        ],
+      }),
     });
   } catch (error) {
     throw new Error(`Failed to reach model API (${baseUrl}/chat/completions). ${toErrorMessage(error)}`);
   }
 
   const result = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(result.error?.message || "Model request failed.");
+  if (!response.ok) throw new Error(result.error?.message || text("modelRequestFailed"));
   const parsed = extractJson(result.choices?.[0]?.message?.content);
   return normalizeGuidePayload(parsed, location, days, budgetCaps);
 }
@@ -403,13 +545,13 @@ function rowToGuide(row) {
     title: row.title,
     content: row.content || {},
     createdAt: row.created_at,
-    updatedAt: row.updated_at
+    updatedAt: row.updated_at,
   };
 }
 
 async function ensureTemplateId(pool, guide) {
-  const cur = parseTemplateId(guide.templateId);
-  if (cur) return guide;
+  const current = parseTemplateId(guide.templateId);
+  if (current) return guide;
   const templateId = stableTemplateIdByKey(guide.key || "");
   const now = new Date().toISOString();
   await pool.query(`UPDATE guides SET template_id = $1, updated_at = $2 WHERE id = $3`, [templateId, now, guide.id]);
@@ -419,11 +561,14 @@ async function ensureTemplateId(pool, guide) {
 async function listGuides(locationFilter) {
   const pool = await getPool();
   const values = [];
-  let where = "";
+  const whereParts = [];
+
   if (locationFilter) {
     values.push(`%${locationFilter}%`);
-    where = `WHERE location ILIKE $${values.length}`;
+    whereParts.push(`location ILIKE $${values.length}`);
   }
+
+  const where = whereParts.length ? `WHERE ${whereParts.join(" AND ")}` : "";
   const { rows } = await pool.query(
     `
       SELECT id, cache_key, location, days, template_id, title, content, created_at, updated_at
@@ -434,18 +579,20 @@ async function listGuides(locationFilter) {
     `,
     values
   );
-  const out = [];
+
+  const output = [];
   for (const row of rows) {
-    const g = await ensureTemplateId(pool, rowToGuide(row));
-    out.push({ ...g, source: "cache" });
+    const guide = await ensureTemplateId(pool, rowToGuide(row));
+    output.push({ ...guide, source: "cache" });
   }
-  return out;
+  return output;
 }
 
 async function getOrCreateGuide(location, days, options = {}) {
   const pool = await getPool();
   const key = buildKey(location, days);
   const useCache = options.useCache !== false;
+
   if (useCache) {
     const { rows } = await pool.query(
       `
@@ -457,18 +604,20 @@ async function getOrCreateGuide(location, days, options = {}) {
       `,
       [key]
     );
+
     if (rows.length) {
-      const g = await ensureTemplateId(pool, rowToGuide(rows[0]));
-      return { item: { ...g, source: "cache" }, cached: true };
+      const guide = await ensureTemplateId(pool, rowToGuide(rows[0]));
+      return { item: { ...guide, source: "cache" }, cached: true };
     }
   }
 
   const budgetCaps = await getBudgetGuidance(pool, location);
-  const content = await generateGuide(location, days, budgetCaps);
+  const referenceSpots = Array.isArray(options.referenceSpots) ? options.referenceSpots : [];
+  const content = await generateGuide(location, days, budgetCaps, referenceSpots);
   const now = new Date().toISOString();
   const id = buildGuideId();
   const templateId = randomTemplateId();
-  const title = String(content.title || `${location}${days}天旅游攻略`);
+  const title = String(content.title || text("guideTitle", { location, days }));
 
   await pool.query(
     `
@@ -489,9 +638,9 @@ async function getOrCreateGuide(location, days, options = {}) {
       content,
       createdAt: now,
       updatedAt: now,
-      source: "generated"
+      source: "generated",
     },
-    cached: false
+    cached: false,
   };
 }
 
@@ -502,16 +651,17 @@ async function geocodeByQuery(query) {
     const response = await fetch(url, {
       headers: {
         Accept: "application/json",
-        "User-Agent": GEOCODE_USER_AGENT
-      }
+        "User-Agent": GEOCODE_USER_AGENT,
+      },
     });
     const data = await response.json().catch(() => []);
     if (!Array.isArray(data) || !data.length) return null;
+
     const item = data[0];
     return {
       lat: Number(item.lat),
       lng: Number(item.lon),
-      name: String(item.display_name || "")
+      name: String(item.display_name || ""),
     };
   } catch {
     return null;
@@ -519,28 +669,37 @@ async function geocodeByQuery(query) {
 }
 
 async function deleteGuide(id, password) {
-  if (!DELETE_PASSWORD) return { ok: false, statusCode: 503, error: "Delete password is not configured on server." };
-  if (!password) return { ok: false, statusCode: 401, error: "Password is required for delete." };
-  if (password !== DELETE_PASSWORD) return { ok: false, statusCode: 403, error: "Invalid delete password." };
+  if (!DELETE_PASSWORD) return { ok: false, statusCode: 503, error: text("deletePasswordNotConfigured") };
+  if (!password) return { ok: false, statusCode: 401, error: text("deletePasswordRequired") };
+  if (password !== DELETE_PASSWORD) return { ok: false, statusCode: 403, error: text("deletePasswordInvalid") };
+
   const pool = await getPool();
-  const result = await pool.query(`DELETE FROM guides WHERE id = $1 OR cache_key = $1`, [id]);
+  const result = await pool.query(`DELETE FROM guides WHERE id = $1`, [id]);
   return { ok: true, deleted: result.rowCount > 0 };
 }
 
 async function handleApi(req, res, url) {
+  if (req.method === "GET" && url.pathname === "/api/health") {
+    sendJson(res, 200, { ok: true, service: "travel-guide-generator" });
+    return;
+  }
+
   if (req.method === "GET" && url.pathname === "/api/config") {
-    sendJson(res, 200, { couponUrl: COUPON_URL || "" });
+    sendJson(res, 200, {
+      promotions: buildPromotions(),
+    });
     return;
   }
 
   if (req.method === "GET" && url.pathname === "/api/geocode") {
-    const q = String(url.searchParams.get("q") || "").trim();
+    const query = String(url.searchParams.get("q") || "").trim();
     const city = String(url.searchParams.get("city") || "").trim();
-    if (!q) {
-      sendJson(res, 400, { error: "q cannot be empty." });
+    if (!query) {
+      sendJson(res, 400, { error: text("geocodeQueryEmpty") });
       return;
     }
-    const full = city && !q.includes(city) ? `${q} ${city}` : q;
+
+    const full = city && !query.includes(city) ? `${query} ${city}` : query;
     let point = await geocodeByQuery(full);
     if (!point && city) point = await geocodeByQuery(city);
     sendJson(res, 200, { point });
@@ -559,37 +718,46 @@ async function handleApi(req, res, url) {
     const location = String(body.location || "").trim();
     const days = Number(body.days);
     const useCache = body.useCache !== false;
+    const referenceSpots = Array.isArray(body.referenceSpots)
+      ? body.referenceSpots.map((spot) => String(spot || "").trim()).filter(Boolean).slice(0, 8)
+      : [];
+
     if (!location) {
-      sendJson(res, 400, { error: "location cannot be empty." });
+      sendJson(res, 400, { error: text("locationEmpty") });
       return;
     }
+
     if (!Number.isInteger(days) || days < 1 || days > 14) {
-      sendJson(res, 400, { error: "days must be an integer between 1 and 14." });
+      sendJson(res, 400, { error: text("daysInvalid") });
       return;
     }
-    const result = await getOrCreateGuide(location, days, { useCache });
+
+    const result = await getOrCreateGuide(location, days, { useCache, referenceSpots });
     sendJson(res, 200, result);
     return;
   }
 
   if (req.method === "DELETE" && url.pathname.startsWith("/api/guides/")) {
-    const id = decodeURIComponent(url.pathname.slice("/api/guides/".length) || "").trim();
     const body = await readBody(req);
+    const id = decodeURIComponent(url.pathname.slice("/api/guides/".length) || "").trim();
     const password = String(body.password || "");
+
     if (!id) {
-      sendJson(res, 400, { error: "id cannot be empty." });
+      sendJson(res, 400, { error: text("idEmpty") });
       return;
     }
+
     const result = await deleteGuide(id, password);
     if (!result.ok) {
       sendJson(res, result.statusCode, { error: result.error });
       return;
     }
+
     sendJson(res, 200, { deleted: result.deleted });
     return;
   }
 
-  sendJson(res, 404, { error: "API route not found." });
+  sendJson(res, 404, { error: text("apiRouteNotFound") });
 }
 
 async function handleStatic(res, url) {
@@ -597,37 +765,90 @@ async function handleStatic(res, url) {
     sendText(res, 204, "", "image/x-icon");
     return;
   }
+
   if (url.pathname === "/assets/vercel-analytics.mjs") {
     const script = await fs.readFile(VERCEL_ANALYTICS_FILE, "utf8");
     sendText(res, 200, script, "application/javascript; charset=utf-8");
     return;
   }
+
   if (url.pathname !== "/" && url.pathname !== "/index.html") {
-    sendText(res, 404, "Not Found", "text/plain; charset=utf-8");
-    return;
+    const relativePath = decodeURIComponent(url.pathname).replace(/^\/+/, "");
+    const candidate = path.resolve(ROOT, relativePath);
+    const relativeToRoot = path.relative(ROOT, candidate);
+    const escapesRoot = relativeToRoot.startsWith("..") || path.isAbsolute(relativeToRoot);
+
+    if (escapesRoot) {
+      sendText(res, 404, text("notFound"), "text/plain; charset=utf-8");
+      return;
+    }
+
+    try {
+      const stat = await fs.stat(candidate);
+      if (!stat.isFile()) {
+        sendText(res, 404, text("notFound"), "text/plain; charset=utf-8");
+        return;
+      }
+
+      const content = await fs.readFile(candidate);
+      sendText(res, 200, content, getContentType(candidate));
+      return;
+    } catch {
+      sendText(res, 404, text("notFound"), "text/plain; charset=utf-8");
+      return;
+    }
   }
+
   const html = await fs.readFile(INDEX_FILE, "utf8");
   sendText(res, 200, html, "text/html; charset=utf-8");
 }
 
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, `http://${req.headers.host || "localhost"}`);
+  const isApi = url.pathname.startsWith("/api/");
+
   try {
-    if (url.pathname.startsWith("/api/")) {
+    if (isApi) {
       await handleApi(req, res, url);
       return;
     }
+
     await handleStatic(res, url);
   } catch (error) {
     const message = toErrorMessage(error);
     console.error("[server-error]", message, error);
-    sendJson(res, 500, { error: message || "Internal server error." });
+    if (isApi) {
+      sendJson(res, 500, { error: message || text("internalServerError") });
+      return;
+    }
+    sendText(res, 500, message || text("internalServerError"), "text/plain; charset=utf-8");
   }
 });
 
-server.listen(PORT, () => {
-  console.log(`Travel guide app running at http://localhost:${PORT}`);
-});
+function listenWithFallback(startPort, attempts = 10) {
+  let currentPort = Number(startPort) || 3000;
+
+  const tryListen = (remaining) => {
+    server.once("error", (error) => {
+      if (error?.code === "EADDRINUSE" && remaining > 0) {
+        const nextPort = currentPort + 1;
+        console.warn(`[server] Port ${currentPort} is in use, retrying on ${nextPort}`);
+        currentPort = nextPort;
+        tryListen(remaining - 1);
+        return;
+      }
+      throw error;
+    });
+
+    server.listen(currentPort, () => {
+      console.log(text("startupLog", { port: currentPort }));
+    });
+  };
+
+  tryListen(attempts);
+}
+
+listenWithFallback(PORT);
 
 process.on("SIGINT", async () => {
   if (pgPool) await pgPool.end();

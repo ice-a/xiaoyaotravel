@@ -3,9 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8097273255284826"
-     crossorigin="anonymous"></script>
-     <script defer src="https://count.020417.xyz/script.js" data-website-id="52e6dac5-f235-4fed-bde8-045fca43edc1"></script>
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8097273255284826" crossorigin="anonymous"></script>
+  <script defer src="https://count.020417.xyz/script.js" data-website-id="52e6dac5-f235-4fed-bde8-045fca43edc1"></script>
   <title>旅游攻略生成器</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
   <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
@@ -15,26 +14,9 @@
     inject();
   </script>
   <style>
-    :root {
-      --bg:#f2efe8;
-      --line:#dcd7cd;
-      --ink:#27343b;
-      --sub:#66757c;
-      --brand:#2e6f8b;
-      --brand-soft:#e9f2f7;
-      --card:#fff;
-      --panel:#faf8f4;
-    }
+    :root { --bg:#f2efe8; --line:#dcd7cd; --ink:#27343b; --sub:#66757c; --brand:#2e6f8b; --brand-soft:#e9f2f7; --card:#fff; }
     * { box-sizing:border-box; }
-    body {
-      margin:0;
-      color:var(--ink);
-      font-family:"PingFang SC","Microsoft YaHei","Segoe UI",sans-serif;
-      background:
-        radial-gradient(1000px 360px at -20% -8%, rgba(46,111,139,.12), transparent 65%),
-        radial-gradient(900px 320px at 120% -8%, rgba(148,121,77,.1), transparent 64%),
-        var(--bg);
-    }
+    body { margin:0; color:var(--ink); font-family:"PingFang SC","Microsoft YaHei","Segoe UI",sans-serif; background:radial-gradient(1000px 360px at -20% -8%, rgba(46,111,139,.12), transparent 65%),radial-gradient(900px 320px at 120% -8%, rgba(148,121,77,.1), transparent 64%),var(--bg); }
     .app { width:min(1360px,calc(100% - 28px)); margin:14px auto; display:grid; gap:12px; }
     .card { border:1px solid var(--line); border-radius:14px; background:var(--card); box-shadow:0 10px 28px rgba(30,40,45,.08); }
     .header { padding:12px; display:grid; gap:10px; }
@@ -44,12 +26,12 @@
     .tabs { display:flex; gap:8px; }
     .tab { text-decoration:none; border:1px solid #c8d6df; background:#fff; color:var(--brand); border-radius:999px; font-size:12px; font-weight:800; padding:6px 12px; }
     .tab.active { background:var(--brand-soft); border-color:#8fb5c4; color:#0e4f67; }
-    .toolbar { display:grid; grid-template-columns:1fr auto auto; gap:8px; }
-    input,select,button { font:inherit; border:1px solid var(--line); border-radius:10px; padding:9px 11px; background:#fff; color:var(--ink); }
+    .toolbar { display:grid; grid-template-columns:1fr auto; gap:8px; }
+    input,select,button,textarea { font:inherit; border:1px solid var(--line); border-radius:10px; padding:9px 11px; background:#fff; color:var(--ink); }
+    textarea { resize:vertical; }
     button { cursor:pointer; font-weight:700; }
     .btn-primary { background:linear-gradient(140deg,#2e6f8b,#1e586f); color:#fff; border:none; }
     .sub { color:var(--sub); font-size:12px; }
-
     .loc-strip { display:flex; gap:8px; flex-wrap:wrap; overflow:visible; }
     .loc-chip { border:1px solid #c8d6df; border-radius:999px; background:#fff; color:var(--brand); font-size:12px; font-weight:800; padding:6px 11px; cursor:pointer; }
     .loc-chip.active { background:var(--brand-soft); border-color:#8fb5c4; }
@@ -58,7 +40,6 @@
     .hist-item.active { box-shadow:inset 0 0 0 1px #5a8ea1; border-color:#93b4c1; }
     .hist-head { display:flex; justify-content:space-between; align-items:center; gap:8px; }
     .del-btn { border:1px solid #e6b9ae; background:#fff6f4; color:#a54531; border-radius:999px; padding:3px 8px; font-size:11px; }
-
     .content { display:grid; grid-template-columns:minmax(330px,390px) minmax(0,1fr); gap:12px; }
     .content.summary-mode { grid-template-columns:1fr; }
     .content.summary-mode #left-pane { display:none; }
@@ -67,116 +48,40 @@
     .form h3 { margin:0; font-size:24px; font-weight:900; color:#173d4f; }
     .status-msg { min-height:18px; font-size:13px; color:var(--sub); }
     .status-msg.err { color:#a54531; }
-
-    .side-routes {
-      margin-top:10px;
-      border:1px solid #d9e3ea;
-      border-radius:12px;
-      background:linear-gradient(180deg,#ffffff 0%,#fbfdff 100%);
-      box-shadow:0 10px 26px rgba(24,56,73,.08), inset 0 1px 0 rgba(255,255,255,.85);
-      min-height:460px;
-      padding:10px;
-      display:grid;
-      align-content:start;
-      gap:8px;
-    }
-    .side-routes h4 { margin:0; font-size:18px; color:#1d4659; }
-    .side-route-list { display:grid; gap:8px; max-height:560px; overflow:auto; padding-right:2px; }
-    .side-route-day {
-      border:1px solid #dce6ed;
-      border-radius:10px;
-      background:#ffffff;
-      box-shadow:0 4px 12px rgba(23,53,68,.06);
-      padding:8px;
-      cursor:pointer;
-      display:grid;
-      gap:5px;
-      transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;
-    }
-    .side-route-day:hover {
-      transform:translateY(-1px);
-      box-shadow:0 8px 18px rgba(23,53,68,.1);
-      border-color:#c8d8e4;
-    }
-    .side-route-day.active {
-      border-color:#8eb2cf;
-      background:linear-gradient(180deg,#f8fcff 0%,#f0f7fd 100%);
-      box-shadow:0 10px 20px rgba(46,111,139,.18), inset 0 1px 0 rgba(255,255,255,.85);
-    }
-    .side-route-day b { font-size:14px; color:#1e4d60; }
-    .side-route-step { color:var(--sub); font-size:12px; line-height:1.5; }
-
-    .main { padding:12px; display:grid; gap:10px; align-content:start; }
-    .section { border:1px solid var(--line); border-radius:12px; background:var(--panel); padding:10px; display:grid; gap:8px; }
-    .section h3 { margin:0; font-size:22px; font-weight:900; color:#1d4659; }
-    .chips { display:flex; flex-wrap:wrap; gap:8px; }
-    .chip { border:1px solid #c8d8e1; border-radius:999px; background:#f7fcff; color:#1e6179; font-size:12px; font-weight:800; padding:4px 10px; }
-    .overview-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
-    .overview-card { border:1px solid #dde6ee; border-radius:10px; background:#fff; padding:10px; display:grid; gap:6px; }
-    .overview-card h4 { margin:0; font-size:14px; color:#1e4d60; }
-    .day { border:1px solid #e2e9ee; border-radius:10px; background:#fff; padding:8px; cursor:pointer; }
-    .day.active { border-color:#7ea6d8; box-shadow:inset 0 0 0 1px #7ea6d8; background:#eef6ff; }
-    .slot { color:var(--sub); font-size:13px; margin-top:4px; line-height:1.52; }
-    .budget-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; }
-    .budget-item { border:1px solid #dde6ee; border-radius:10px; background:#fff; padding:8px; display:grid; gap:4px; }
-    .budget-item b { font-size:13px; color:#1e4d60; }
-    .tips-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
-    .tips-box { border:1px solid #dde6ee; border-radius:10px; background:#fff; padding:8px; }
-    .tips-box h4 { margin:0 0 6px; font-size:14px; color:#1e4d60; }
-    .tips-list { margin:0; padding-left:18px; color:var(--sub); font-size:13px; line-height:1.6; display:grid; gap:2px; }
-    #map { width:100%; height:340px; border:1px solid #d9e4ec; border-radius:10px; background:#f8fbfd; }
-
-    .coupon { border:1px dashed #8fb5c4; border-radius:10px; padding:10px; background:#f6fcff; display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap; }
-    .coupon a { color:#0e4f67; font-weight:700; }
-    .filters { display:flex; gap:8px; flex-wrap:wrap; }
-    .filter { border:1px solid #bfced9; background:#fff; color:var(--brand); border-radius:999px; padding:6px 12px; font-size:12px; font-weight:800; cursor:pointer; }
+    .chips { display:flex; gap:8px; }
+    .toggle-row { display:flex; align-items:center; gap:8px; }
+    .ref-panel { display:none; gap:6px; }
+    .ref-panel.visible { display:grid; }
+    .main { padding:12px; }
+    .section { display:grid; gap:10px; margin-bottom:12px; }
+    .section h3 { margin:0; font-size:18px; color:#1d4659; }
+    .summary-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:12px; }
+    .summary-card,.tips-box,.budget-card,.itinerary-card { border:1px solid #e2e8ee; border-radius:12px; padding:10px; background:#fff; }
+    .summary-stat { display:grid; gap:8px; }
+    .chart { height:280px; }
+    .tips-grid,.budget-grid,.itinerary-grid { display:grid; gap:12px; }
+    .tips-grid { grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); }
+    .budget-grid { grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); }
+    .filters { display:flex; gap:8px; margin-bottom:12px; }
+    .filter { border:1px solid #c8d6df; background:#fff; color:#234d5f; }
     .filter.active { background:var(--brand-soft); border-color:#8fb5c4; }
-    .summary-grid { display:grid; grid-template-columns:repeat(12,minmax(0,1fr)); gap:10px; }
-    .summary-card { border:1px solid var(--line); border-radius:12px; background:#fff; padding:10px; display:grid; gap:8px; grid-column:span 4; min-height:320px; }
-    .summary-card h3 { margin:0; font-size:15px; }
-    .summary-stat { display:grid; gap:6px; align-content:start; color:var(--sub); font-size:13px; }
-    .chart { width:100%; height:250px; }
-
-    @media (max-width:1240px) { .summary-card { grid-column:span 6; } }
-    @media (max-width:1060px) {
-      .content { grid-template-columns:1fr; }
-      .toolbar { grid-template-columns:1fr auto; }
-      .left-pane,.main { padding:10px; }
-      .side-routes { min-height:auto; }
-      .side-route-list { max-height:320px; }
-      .summary-card { grid-column:span 12; }
-      .section h3 { font-size:20px; }
-      .budget-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
-    }
-    @media (max-width:720px) {
-      .app { width:calc(100% - 14px); margin:7px auto; gap:8px; }
-      .header { padding:9px; gap:8px; }
-      .header-top { align-items:flex-start; gap:8px; }
-      .tabs { width:100%; }
-      .tab { flex:1; text-align:center; }
-      .toolbar { grid-template-columns:1fr; }
-      #count { justify-self:start; }
-      #reload { width:100%; }
-      .hist-item { min-width:205px; }
-      .form h3 { font-size:20px; }
-      .section h3 { font-size:18px; }
-      .overview-grid,.tips-grid { grid-template-columns:1fr; }
-      .budget-grid { grid-template-columns:1fr; }
-      .summary-card { min-height:260px; }
-      .chart { height:220px; }
-      .side-routes h4 { font-size:16px; }
-      .side-route-list { max-height:280px; }
-      #map { height:260px; }
-    }
-    @media (max-width:480px) {
-      input,select,button { padding:10px; }
-      .chips { gap:6px; }
-      .chip { font-size:11px; }
-      .hist-item { min-width:185px; }
-      .day,.budget-item,.tips-box,.overview-card,.side-route-day { padding:7px; }
-      .slot { font-size:12px; line-height:1.45; }
-      #map { height:230px; }
-    }
+    .side-routes { margin-top:10px; border:1px solid #d9e3ea; border-radius:12px; background:#fbfdff; min-height:460px; padding:10px; display:grid; gap:8px; align-content:start; }
+    .side-routes h4 { margin:0; font-size:18px; color:#1d4659; }
+    .side-route-list { display:grid; gap:8px; max-height:560px; overflow:auto; }
+    .side-route-day { border:1px solid #dce6ed; border-radius:10px; background:#fff; padding:8px; cursor:pointer; }
+    .side-route-day.active { border-color:#86aebe; box-shadow:inset 0 0 0 1px #86aebe; }
+    .side-route-step { font-size:12px; color:#53636a; margin-top:4px; }
+    .hero,.meta { display:grid; gap:10px; }
+    .meta { display:flex; flex-wrap:wrap; }
+    .badge { background:#eef4f7; color:#1e586f; border-radius:999px; padding:4px 10px; font-size:12px; font-weight:700; }
+    #map { height:360px; border-radius:12px; overflow:hidden; }
+    .promo-list { display:flex; flex-wrap:nowrap; gap:10px; overflow-x:auto; padding-bottom:2px; }
+    .promo-card { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px; border:1px solid #d9e3ea; border-radius:12px; background:linear-gradient(135deg,#fff,#f7fbfd); flex:1 1 0; min-width:240px; }
+    .promo-main { min-width:0; display:grid; gap:4px; }
+    .promo-main strong,.promo-main .sub { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .promo-card a { width:max-content; text-decoration:none; color:#fff; background:#1e586f; border-radius:999px; padding:7px 12px; font-weight:700; flex:0 0 auto; }
+    @media (max-width: 980px) { .promo-list { overflow-x:auto; } .promo-card { min-width:240px; } }
+    @media (max-width: 980px) { .content { grid-template-columns:1fr; } .left-pane { order:2; } .main { order:1; } }
   </style>
 </head>
 <body>
@@ -190,401 +95,84 @@
         </nav>
       </div>
       <div class="toolbar">
-        <input id="search" placeholder="按地点/缓存键/记录ID搜索历史" />
-        <div id="count" class="sub">0 条</div>
+        <input id="search" placeholder="按地点 / 缓存键 / 记录 ID 搜索历史" />
         <button id="reload">刷新</button>
       </div>
       <div id="loc-strip" class="loc-strip"></div>
       <div id="hist-strip" class="hist-strip"></div>
     </header>
-
     <section id="content" class="content">
       <aside id="left-pane" class="card left-pane">
         <div class="form">
           <h3>生成旅游攻略</h3>
-          <label>旅游地点 <input id="location" placeholder="例如：成都、首尔、东京" /></label>
-          <label>游玩天数
-            <select id="days">
-              <option value="1">1 天</option><option value="2" selected>2 天</option><option value="3">3 天</option>
-              <option value="4">4 天</option><option value="5">5 天</option><option value="6">6 天</option><option value="7">7 天</option>
-            </select>
-          </label>
-          <label><input id="use-cache" type="checkbox" checked /> 使用缓存命中（不勾选则直接重新生成）</label>
-          <div class="chips">
-            <button id="submit" class="btn-primary" type="button">生成并保存</button>
-            <button id="regenerate" type="button">重新生成</button>
+          <label>旅游地点 <input id="location" placeholder="例如：成都、重庆、杭州" /></label>
+          <label class="toggle-row"><input id="use-reference-spots" type="checkbox" /> 启用参考景点</label>
+          <div id="reference-spots-panel" class="ref-panel">
+            <label><textarea id="reference-spots" rows="3" placeholder="例如：宽窄巷子、锦里；多个景点可用逗号、分号或换行分隔"></textarea></label>
           </div>
+          <label>游玩天数
+            <select id="days"><option value="1">1 天</option><option value="2" selected>2 天</option><option value="3">3 天</option><option value="4">4 天</option><option value="5">5 天</option><option value="6">6 天</option><option value="7">7 天</option></select>
+          </label>
+          <label><input id="use-cache" type="checkbox" checked /> 使用缓存命中（取消勾选则直接重新生成）</label>
+          <div class="chips"><button id="submit" class="btn-primary" type="button">生成并保存</button><button id="regenerate" type="button">重新生成</button></div>
           <div id="status" class="status-msg"></div>
           <div class="sub">删除历史时需要输入 <code>DELETE_PASSWORD</code>。</div>
         </div>
         <section class="side-routes">
           <h4>路线可视化</h4>
-          <div id="side-routes" class="side-route-list">
-            <div class="sub">请选择一条历史攻略后查看路线。</div>
-          </div>
+          <div id="side-routes" class="side-route-list"><div class="sub">请选择一条历史攻略后查看路线。</div></div>
         </section>
       </aside>
-      <main id="root" class="card main">
-        <div class="sub">请选择历史记录，或者先生成一条新的攻略。</div>
-      </main>
+      <main id="root" class="card main"><div class="sub">请选择历史记录，或者先生成一条新的攻略。</div></main>
     </section>
   </div>
-
   <script>
     const $ = (id) => document.getElementById(id);
-    const S = {
-      items: [],
-      activeId: "",
-      activeLoc: "all",
-      q: "",
-      route: "guides",
-      winDays: 0,
-      map: null,
-      mapLayer: null,
-      charts: [],
-      couponUrl: "",
-      activeRouteDay: 1
+    const SLOT_KEYS = ["morning", "afternoon", "evening"];
+    const S = { items: [], activeId: "", activeLoc: "all", q: "", route: "guides", winDays: 0, map: null, mapLayer: null, charts: [], promotions: [], activeRouteDay: 1 };
+    const TEXT = {
+      noData: "暂无数据", requestFailed: "请求失败", loadingHistory: "正在加载历史...", historyLoaded: "历史加载完成。", noHistory: "暂无历史记录。", noHistoryFilter: "当前筛选条件下没有历史记录。", loadFailed: "加载失败",
+      inputLocationFirst: "请先输入地点，或先选中一条历史记录。", invalidDays: "天数必须是 1 到 14 之间的整数。", regeneratingSkipCache: "正在重新生成（已跳过缓存）...", generatingWithCache: "正在生成（会先尝试缓存命中）...", generatingSkipCache: "正在直接生成（已跳过缓存）...",
+      regeneratedSaved: "已重新生成并保存。", cacheOpened: "缓存命中，已打开历史记录。", generateFailed: "生成失败", historyCount: ({ count }) => `${count} 条`, durationDays: ({ count }) => `${count} 天`, dayLabel: ({ day }) => `第 ${day} 天`, routeTitle: ({ day }) => `第 ${day} 天交通路线`,
+      deletePrompt: "请输入删除密码（DELETE_PASSWORD）", deleting: "正在删除...", deleteRefreshed: "未删除到记录，已刷新。", deleteSuccess: "删除成功。", deleteFailed: "删除失败", noRouteDetail: "暂无路线细节", freeActivity: "自由活动", morning: "上午", afternoon: "下午", evening: "晚上",
+      summaryHeat: "热门地点", summaryDays: "天数分布", summaryTags: "标签分布", summaryOverall: "概览", summarySample: ({ count }) => `当前样本：${count}`, summaryTotal: ({ count }) => `总记录：${count}`, summaryLocations: ({ count }) => `地点数：${count}`, summaryTagsCount: ({ count }) => `标签数：${count}`,
+      filterAll: "全部时间", filter7: "最近 7 天", filter30: "最近 30 天", foodsHeading: "吃喝推荐", hotelsHeading: "住宿建议", tipsHeading: "贴士", notesHeading: "备注", noFood: "暂无餐饮建议", noHotel: "暂无住宿建议", noTips: "暂无补充贴士",
+      budgetTitle: "预算与建议", budgetNote: "价格优先参考历史记录，尽量避免高价方案。", itineraryTitle: "每日行程", mapTitle: "景点地图", mapLoading: "正在加载地图坐标...", mapNoCoords: "未能获取地图坐标。", cityCenter: "城市中心", noSummary: "暂无摘要", noTags: "暂无标签", noItinerary: "暂无详细行程", transport: "交通", hotel: "住宿", food: "餐饮", misc: "杂费"
     };
-
-    const esc = (v) => String(v ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
-    const setMsg = (m, err) => { $("status").textContent = m || ""; $("status").className = err ? "status-msg err" : "status-msg"; };
-    const api = async (url, opt) => { const r = await fetch(url, opt); const d = await r.json().catch(() => ({})); if (!r.ok) throw new Error(d.error || "请求失败"); return d; };
-    const topN = (map, n = 8) => [...map.entries()].sort((a, b) => b[1] - a[1]).slice(0, n).map(([name, value]) => ({ name, value }));
-
-    const visible = () => {
-      const byLoc = S.activeLoc === "all" ? S.items : S.items.filter((x) => String(x.location || "") === S.activeLoc);
-      const k = S.q.trim().toLowerCase();
-      if (!k) return byLoc;
-      return byLoc.filter((x) => String(x.location || "").toLowerCase().includes(k) || String(x.key || "").toLowerCase().includes(k) || String(x.id || "").toLowerCase().includes(k));
-    };
-
-    const disposeCharts = () => { S.charts.forEach((c) => { try { c.dispose(); } catch {} }); S.charts = []; };
-
-    const pie = (id, data) => {
-      const el = $(id); if (!el || !window.echarts) return;
-      const c = echarts.init(el);
-      c.setOption({ tooltip: { trigger: "item" }, legend: { bottom: 0, type: "scroll" }, series: [{ type: "pie", radius: ["35%", "70%"], data: data.length ? data : [{ name: "暂无数据", value: 1 }] }] });
-      S.charts.push(c);
-    };
-
-    const bar = (id, data, color) => {
-      const el = $(id); if (!el || !window.echarts) return;
-      const c = echarts.init(el);
-      const names = data.map((x) => x.name);
-      c.setOption({ tooltip: { trigger: "axis" }, grid: { left: 36, right: 16, top: 18, bottom: 52 }, xAxis: { type: "category", data: names, axisLabel: { interval: 0, rotate: names.length > 4 ? 24 : 0 } }, yAxis: { type: "value" }, series: [{ type: "bar", data: data.map((x) => x.value), itemStyle: { color: color || "#1f6f8b", borderRadius: [6, 6, 0, 0] } }] });
-      S.charts.push(c);
-    };
-
-    async function geocodeOne(q, city) {
-      const d = await api(`/api/geocode?q=${encodeURIComponent(q)}&city=${encodeURIComponent(city || "")}`);
-      return d.point || null;
-    }
-
-    function renderLocStrip() {
-      const m = new Map();
-      S.items.forEach((x) => { const loc = String(x.location || "").trim(); if (loc) m.set(loc, (m.get(loc) || 0) + 1); });
-      const html = [`<button class="loc-chip${S.activeLoc === "all" ? " active" : ""}" data-loc="all">全部 (${S.items.length})</button>`];
-      [...m.entries()].sort((a, b) => a[0].localeCompare(b[0], "zh-CN")).forEach(([loc, cnt]) => html.push(`<button class="loc-chip${S.activeLoc === loc ? " active" : ""}" data-loc="${esc(loc)}">${esc(loc)} (${cnt})</button>`));
-      $("loc-strip").innerHTML = html.join("");
-      $("loc-strip").querySelectorAll("[data-loc]").forEach((b) => b.onclick = () => {
-        S.activeLoc = b.dataset.loc || "all";
-        const v = visible();
-        if (!v.some((x) => (x.id || x.key) === S.activeId)) S.activeId = v[0] ? (v[0].id || v[0].key) : "";
-        renderLocStrip();
-        renderHistStrip();
-        if (S.route === "guides") renderCurrent();
-      });
-    }
-
-    function renderHistStrip() {
-      const v = visible();
-      $("count").textContent = `${v.length} 条`;
-      if (!v.length) { $("hist-strip").innerHTML = `<div class="sub">当前筛选下没有历史记录。</div>`; return; }
-      $("hist-strip").innerHTML = v.map((x) => {
-        const id = x.id || x.key;
-        const t = x.updatedAt ? new Date(x.updatedAt).toLocaleString("zh-CN") : "-";
-        return `<article class="hist-item${id === S.activeId ? " active" : ""}" data-id="${esc(id)}"><div class="hist-head"><b>${esc(x.key || "-")}</b><button class="del-btn" data-del="${esc(id)}">删除</button></div><div class="sub">${esc(x.location || "-")} · ${esc(x.days)} 天</div><div class="sub">ID: ${esc(id)}</div><div class="sub">${esc(t)}</div></article>`;
-      }).join("");
-      $("hist-strip").querySelectorAll(".hist-item").forEach((el) => el.onclick = (e) => {
-        if (e.target?.dataset?.del) return;
-        const id = el.dataset.id || "";
-        const item = S.items.find((x) => (x.id || x.key) === id);
-        if (!item) return;
-        S.activeId = id;
-        renderHistStrip();
-        if (S.route === "guides") renderGuide(item);
-      });
-      $("hist-strip").querySelectorAll("[data-del]").forEach((b) => b.onclick = async (e) => {
-        e.stopPropagation();
-        const id = b.dataset.del || "";
-        const pwd = prompt("请输入删除密码（DELETE_PASSWORD）");
-        if (pwd === null) return;
-        try {
-          setMsg("正在删除...");
-          const ret = await api(`/api/guides/${encodeURIComponent(id)}`, { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ password: pwd }) });
-          if (!ret.deleted) { await load(); setMsg("未删除到记录，已刷新。", true); return; }
-          S.items = S.items.filter((x) => (x.id || x.key) !== id);
-          const vv = visible();
-          S.activeId = vv[0] ? (vv[0].id || vv[0].key) : "";
-          renderLocStrip();
-          renderHistStrip();
-          renderCurrent();
-          setMsg("删除成功。");
-        } catch (err) { setMsg(err.message || "删除失败", true); }
-      });
-    }
-
-    function normalizeRoutes(rec) {
-      const c = rec?.content || {};
-      const raw = Array.isArray(c.routes) ? c.routes : [];
-      const n = raw.map((r, i) => ({ day: Number(r?.day) || i + 1, title: String(r?.title || `Day ${i + 1}`), steps: Array.isArray(r?.steps) ? r.steps.filter((s) => s && s.from && s.to) : [] })).filter((r) => r.steps.length);
-      return n.length ? n : [{ day: 1, title: "Day 1", steps: [] }];
-    }
-
-    function spotCandidates(rec) {
-      const c = rec?.content || {};
-      if (Array.isArray(c.spots) && c.spots.length) {
-        return c.spots.map((s) => ({ name: String(s.name || "").trim(), note: String(s.note || ""), lat: Number(s.lat), lng: Number(s.lng) })).filter((s) => s.name);
-      }
-      const it = Array.isArray(c.itinerary) ? c.itinerary : [];
-      const out = [];
-      it.forEach((d, i) => ["morning", "afternoon", "evening"].forEach((k) => {
-        const n = String(d?.[k] || "").trim();
-        if (n) out.push({ name: n, note: `Day ${i + 1} ${k}`, lat: null, lng: null });
-      }));
-      return out.slice(0, 8);
-    }
-
-    async function resolveSpots(location, spots) {
-      const resolved = [];
-      for (const s of spots) {
-        if (Number.isFinite(s.lat) && Number.isFinite(s.lng)) { resolved.push(s); continue; }
-        const p = await geocodeOne(s.name, location);
-        if (p && Number.isFinite(p.lat) && Number.isFinite(p.lng)) resolved.push({ ...s, lat: p.lat, lng: p.lng });
-      }
-      if (!resolved.length && location) {
-        const center = await geocodeOne(location, "");
-        if (center && Number.isFinite(center.lat) && Number.isFinite(center.lng)) resolved.push({ name: location, note: "城市中心", lat: center.lat, lng: center.lng });
-      }
-      return resolved;
-    }
-
+    const text = (key, params) => typeof TEXT[key] === "function" ? TEXT[key](params || {}) : (TEXT[key] ?? key);
+    const esc = (v) => String(v ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+    const setMsg = (message, err) => { const status = $("status"); if (!status) return; status.textContent = message || ""; status.className = err ? "status-msg err" : "status-msg"; };
+    const formatDateTime = (value) => { const ts = Date.parse(value || ""); return Number.isFinite(ts) ? new Intl.DateTimeFormat("zh-CN", { dateStyle:"medium", timeStyle:"short" }).format(new Date(ts)) : "-"; };
+    const formatCount = (value) => new Intl.NumberFormat("zh-CN").format(Number(value) || 0);
+    const parseReferenceSpots = (value) => String(value || "").split(/[\n,;，；]/).map((x) => x.trim()).filter(Boolean).filter((x, i, arr) => arr.findIndex((y) => y.toLowerCase() === x.toLowerCase()) === i).slice(0, 8);
+    function syncReferenceSpotsUi() { const enabled = Boolean($("use-reference-spots")?.checked); const panel = $("reference-spots-panel"); if (panel) panel.classList.toggle("visible", enabled); }
+    const api = async (url, opt = {}) => { const headers = new Headers(opt.headers || {}); let body = opt.body; if (body && typeof body === "object" && !(body instanceof FormData)) { headers.set("Content-Type", "application/json"); body = JSON.stringify(body); } const r = await fetch(url, { ...opt, headers, body }); const d = await r.json().catch(() => ({})); if (!r.ok) throw new Error(d.error || text("requestFailed")); return d; };
+    const visible = () => { const byLoc = S.activeLoc === "all" ? S.items : S.items.filter((item) => String(item.location || "") === S.activeLoc); const keyword = S.q.trim().toLowerCase(); if (!keyword) return byLoc; return byLoc.filter((item) => String(item.location || "").toLowerCase().includes(keyword) || String(item.key || "").toLowerCase().includes(keyword) || String(item.id || "").toLowerCase().includes(keyword)); };
+    const disposeCharts = () => { S.charts.forEach((chart) => { try { chart.dispose(); } catch {} }); S.charts = []; };
+    const topN = (map, limit = 8) => [...map.entries()].sort((a, b) => b[1] - a[1]).slice(0, limit).map(([name, value]) => ({ name, value }));
+    function pie(id, data) { const el = $(id); if (!el || !window.echarts) return; const chart = echarts.init(el); chart.setOption({ tooltip: { trigger: "item" }, legend: { bottom: 0, type: "scroll" }, series: [{ type: "pie", radius: ["35%", "70%"], data: data.length ? data : [{ name: text("noData"), value: 1 }] }] }); S.charts.push(chart); }
+    function bar(id, data, color) { const el = $(id); if (!el || !window.echarts) return; const chart = echarts.init(el); chart.setOption({ tooltip: { trigger: "axis" }, xAxis: { type: "category", data: data.map((item) => item.name), axisLabel: { interval: 0, rotate: 20 } }, yAxis: { type: "value" }, series: [{ type: "bar", data: data.map((item) => item.value), itemStyle: { color } }], grid: { left: 36, right: 16, top: 24, bottom: 60 } }); S.charts.push(chart); }
+    function renderLocStrip() { const map = new Map(); S.items.forEach((item) => { const location = String(item.location || "").trim(); if (location) map.set(location, (map.get(location) || 0) + 1); }); const html = [`<button class="loc-chip${S.activeLoc === "all" ? " active" : ""}" data-loc="all">全部 (${formatCount(S.items.length)})</button>`]; [...map.entries()].sort((a, b) => a[0].localeCompare(b[0], "zh-CN")).forEach(([location, count]) => html.push(`<button class="loc-chip${S.activeLoc === location ? " active" : ""}" data-loc="${esc(location)}">${esc(location)} (${formatCount(count)})</button>`)); $("loc-strip").innerHTML = html.join(""); $("loc-strip").querySelectorAll("[data-loc]").forEach((button) => { button.onclick = () => { S.activeLoc = button.dataset.loc || "all"; const items = visible(); if (!items.some((item) => (item.id || item.key) === S.activeId)) S.activeId = items[0] ? (items[0].id || items[0].key) : ""; renderLocStrip(); renderHistStrip(); if (S.route === "guides") renderCurrent(); }; }); }
+    function renderHistStrip() { const items = visible(); if (!items.length) { $("hist-strip").innerHTML = `<div class="sub">${text("noHistoryFilter")}</div>`; return; } $("hist-strip").innerHTML = items.map((item) => { const id = item.id || item.key; const updated = formatDateTime(item.updatedAt || item.createdAt || ""); return `<article class="hist-item${id === S.activeId ? " active" : ""}" data-id="${esc(id)}"><div class="hist-head"><b>${esc(item.key || "-")}</b><button class="del-btn" data-del="${esc(id)}">删除</button></div><div class="sub">${esc(item.location || "-")} · ${esc(text("durationDays", { count: item.days }))}</div><div class="sub">ID: ${esc(id)}</div><div class="sub">${esc(updated)}</div></article>`; }).join(""); $("hist-strip").querySelectorAll(".hist-item").forEach((element) => { element.onclick = (event) => { if (event.target?.dataset?.del) return; const id = element.dataset.id || ""; const item = S.items.find((entry) => (entry.id || entry.key) === id); if (!item) return; S.activeId = id; renderHistStrip(); if (S.route === "guides") renderGuide(item); }; }); $("hist-strip").querySelectorAll("[data-del]").forEach((button) => { button.onclick = async (event) => { event.stopPropagation(); const id = button.dataset.del || ""; const password = prompt(text("deletePrompt")); if (password === null) return; try { setMsg(text("deleting")); const result = await api(`/api/guides/${encodeURIComponent(id)}`, { method: "DELETE", body: { password } }); if (!result.deleted) { await load(); setMsg(text("deleteRefreshed"), true); return; } S.items = S.items.filter((item) => (item.id || item.key) !== id); const nextItems = visible(); S.activeId = nextItems[0] ? (nextItems[0].id || nextItems[0].key) : ""; renderLocStrip(); renderHistStrip(); renderCurrent(); setMsg(text("deleteSuccess")); } catch (error) { setMsg(error.message || text("deleteFailed"), true); } }; }); }
+    function normalizeRoutes(rec) { const content = rec?.content || {}; const raw = Array.isArray(content.routes) ? content.routes : []; const normalized = raw.map((route, index) => ({ day: Number(route?.day) || index + 1, title: String(route?.title || text("routeTitle", { day: index + 1 })), steps: Array.isArray(route?.steps) ? route.steps.filter((step) => step && step.from && step.to) : [] })).filter((route) => route.steps.length); return normalized.length ? normalized : [{ day: 1, title: text("routeTitle", { day: 1 }), steps: [] }]; }
+    function spotCandidates(rec) { const content = rec?.content || {}; if (Array.isArray(content.spots) && content.spots.length) return content.spots.map((spot) => ({ name: String(spot.name || "").trim(), note: String(spot.note || ""), lat: Number(spot.lat), lng: Number(spot.lng) })).filter((spot) => spot.name); const itinerary = Array.isArray(content.itinerary) ? content.itinerary : []; const output = []; itinerary.forEach((day, index) => { SLOT_KEYS.forEach((slot) => { const name = String(day?.[slot] || "").trim(); if (name) output.push({ name, note: `${text("dayLabel", { day: index + 1 })} ${text(slot)}`, lat: null, lng: null }); }); }); return output.slice(0, 8); }
+    async function geocodeOne(query, city) { const result = await api(`/api/geocode?q=${encodeURIComponent(query)}&city=${encodeURIComponent(city || "")}`); return result.point || null; }
+    async function resolveSpots(location, spots) { const resolved = []; for (const spot of spots) { if (Number.isFinite(spot.lat) && Number.isFinite(spot.lng)) { resolved.push(spot); continue; } const point = await geocodeOne(spot.name, location); if (point && Number.isFinite(point.lat) && Number.isFinite(point.lng)) resolved.push({ ...spot, lat: point.lat, lng: point.lng }); } if (!resolved.length && location) { const center = await geocodeOne(location, ""); if (center && Number.isFinite(center.lat) && Number.isFinite(center.lng)) resolved.push({ name: location, note: text("cityCenter"), lat: center.lat, lng: center.lng }); } return resolved; }
     function resetMap() { if (S.map) { try { S.map.remove(); } catch {} } S.map = null; S.mapLayer = null; }
-
-    async function renderMap(rec) {
-      const el = $("map");
-      if (!el || !window.L) return;
-      const points = await resolveSpots(rec.location || "", spotCandidates(rec));
-      if (!points.length) { const tip = $("map-tip"); if (tip) tip.textContent = "未能获取地图坐标。"; return; }
-      if (!S.map) {
-        S.map = L.map("map");
-        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19, attribution: "&copy; OpenStreetMap" }).addTo(S.map);
-      }
-      if (S.mapLayer) S.map.removeLayer(S.mapLayer);
-      S.mapLayer = L.layerGroup().addTo(S.map);
-      const bounds = [];
-      points.forEach((p) => { L.marker([p.lat, p.lng]).bindPopup(`<strong>${esc(p.name)}</strong><br>${esc(p.note || "")}`).addTo(S.mapLayer); bounds.push([p.lat, p.lng]); });
-      if (bounds.length === 1) S.map.setView(bounds[0], 13);
-      else S.map.fitBounds(bounds, { padding: [22, 22] });
-      const tip = $("map-tip");
-      if (tip) tip.textContent = `已加载 ${points.length} 个坐标点。`;
-      setTimeout(() => S.map && S.map.invalidateSize(), 120);
-    }
-
-    function renderCoupon() {
-      if (!S.couponUrl) return "";
-      return `<section class="coupon"><div><strong>美团优惠</strong><div class="sub">可通过该链接下单酒店等产品</div></div><a href="${esc(S.couponUrl)}" target="_blank" rel="noopener noreferrer">立即使用优惠链接</a></section>`;
-    }
-
-    function renderTextList(items, emptyText) {
-      const list = Array.isArray(items) ? items.map((x) => String(x || "").trim()).filter(Boolean) : [];
-      if (!list.length) return `<div class="sub">${esc(emptyText || "暂无建议")}</div>`;
-      return `<ul class="tips-list">${list.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>`;
-    }
-
-    function renderSideRoutes(routes) {
-      const box = $("side-routes");
-      if (!box) return;
-      const arr = Array.isArray(routes) ? routes : [];
-      if (!arr.length) {
-        box.innerHTML = `<div class="sub">请选择一条历史攻略后查看路线。</div>`;
-        return;
-      }
-      box.innerHTML = arr.map((r) => `<article class="side-route-day" data-route-day="${esc(r.day)}"><b>Day ${esc(r.day)} · ${esc(r.title || "路线")}</b>${(Array.isArray(r.steps) && r.steps.length) ? r.steps.map((s, i) => `<div class="side-route-step">${i + 1}. ${esc(s.from)} → ${esc(s.to)} · ${esc(s.transport || "-")} ${s.duration ? `· ${esc(s.duration)}` : ""}</div>`).join("") : `<div class="side-route-step">暂无路线细节</div>`}</article>`).join("");
-      box.querySelectorAll("[data-route-day]").forEach((el) => {
-        el.onclick = () => setActiveRouteDay(Number(el.dataset.routeDay || "1"), true);
-      });
-    }
-
-    function setActiveRouteDay(day, scrollToMain) {
-      S.activeRouteDay = Number.isFinite(day) && day > 0 ? day : 1;
-      document.querySelectorAll(".side-route-day").forEach((el) => el.classList.toggle("active", Number(el.dataset.routeDay || "0") === S.activeRouteDay));
-      document.querySelectorAll(".itinerary-day").forEach((el) => el.classList.toggle("active", Number(el.dataset.day || "0") === S.activeRouteDay));
-      if (scrollToMain) {
-        const target = document.querySelector(`.itinerary-day[data-day="${S.activeRouteDay}"]`);
-        if (target) target.scrollIntoView({ behavior: "smooth", block: "center" });
-      }
-    }
-
-    function bindGuideRouteLinkage() {
-      document.querySelectorAll(".itinerary-day").forEach((el) => {
-        el.onclick = () => setActiveRouteDay(Number(el.dataset.day || "1"), false);
-      });
-    }
-
-    function renderGuide(rec) {
-      resetMap();
-      const c = rec?.content || {};
-      const it = Array.isArray(c.itinerary) ? c.itinerary : [];
-      const rs = normalizeRoutes(rec);
-      const tags = Array.isArray(c.tags) ? c.tags : [];
-      const tips = Array.isArray(c.tips) ? c.tips : [];
-      const foods = Array.isArray(c.foods) ? c.foods : [];
-      const hotels = Array.isArray(c.hotels) ? c.hotels : [];
-      const b = c.budget || {};
-      const src = rec.source === "cache" ? "缓存命中" : "新生成";
-
-      $("root").innerHTML = `<div class="main">
-        ${renderCoupon()}
-        <div class="chips"><span class="chip">${esc(rec.key || "-")}</span><span class="chip">${esc(rec.location || "-")} · ${esc(rec.days)} 天</span><span class="chip">${src}</span><span class="chip">模板 ${esc(rec.templateId || "-")}</span></div>
-        <section class="section">
-          <h3>${esc(c.title || "旅游攻略")}</h3>
-          <div class="sub">${esc(c.summary || "暂无摘要")}</div>
-          <div class="chips">${tags.length ? tags.map((t) => `<span class="chip">${esc(t)}</span>`).join("") : "<span class='sub'>暂无标签</span>"}</div>
-          <div class="overview-grid"><article class="overview-card"><h4>适合人群</h4><div class="sub">${esc(c.audience || "亲子、朋友出游、周末轻度旅行")}</div></article><article class="overview-card"><h4>出发建议</h4><div class="sub">${esc(c.departureAdvice || "建议上午出发，先安排行李寄存和首站打卡。")}</div></article></div>
-        </section>
-        <section class="section">
-          <h3>每日行程</h3>
-          ${it.length ? it.map((d, i) => `<article class="day itinerary-day" data-day="${i + 1}"><b>Day ${i + 1} · ${esc(d.theme || "行程安排")}</b><div class="slot"><b>上午</b>：${esc(d.morning || "自由活动")}</div><div class="slot"><b>下午</b>：${esc(d.afternoon || "自由活动")}</div><div class="slot"><b>晚上</b>：${esc(d.evening || "自由活动")}</div></article>`).join("") : "<div class='sub'>暂无详细行程</div>"}
-        </section>
-        <section class="section">
-          <h3>预算与建议</h3>
-          <div class="budget-grid"><article class="budget-item"><b>交通</b><div class="sub">${esc(b.transport || "-")}</div></article><article class="budget-item"><b>住宿</b><div class="sub">${esc(b.hotel || "-")}</div></article><article class="budget-item"><b>餐饮</b><div class="sub">${esc(b.food || "-")}</div></article><article class="budget-item"><b>杂费</b><div class="sub">${esc(b.misc || "-")}</div></article></div>
-          <div class="tips-grid"><article class="tips-box"><h4>吃吃喝喝</h4>${renderTextList(foods, "暂无餐饮建议")}</article><article class="tips-box"><h4>住宿建议</h4>${renderTextList(hotels, "暂无住宿建议")}</article><article class="tips-box"><h4>贴士</h4>${renderTextList(tips, "暂无补充贴士")}</article><article class="tips-box"><h4>备注</h4><div class="sub">价格已优先参考历史记录，尽量避免过高预算。</div></article></div>
-        </section>
-        <section class="section"><h3>景点地图</h3><div id="map"></div><div id="map-tip" class="sub">正在加载地图坐标...</div></section>
-      </div>`;
-
-      renderSideRoutes(rs);
-      bindGuideRouteLinkage();
-      setActiveRouteDay(rs[0]?.day || 1, false);
-      renderMap(rec);
-    }
-
-    function renderSummary() {
-      const now = Date.now();
-      const src = S.winDays > 0 ? S.items.filter((it) => { const ts = Date.parse(it.updatedAt || it.createdAt || ""); return Number.isFinite(ts) && now - ts <= S.winDays * 86400000; }) : S.items;
-      const cLoc = new Map(), cDays = new Map(), cTag = new Map();
-      src.forEach((it) => {
-        const loc = String(it.location || "").trim();
-        if (loc) cLoc.set(loc, (cLoc.get(loc) || 0) + 1);
-        const d = Number(it.days) || 0;
-        if (d > 0) cDays.set(`${d}天`, (cDays.get(`${d}天`) || 0) + 1);
-        const ct = it.content || {};
-        (Array.isArray(ct.tags) ? ct.tags : []).forEach((t) => { t = String(t || "").trim(); if (t) cTag.set(t, (cTag.get(t) || 0) + 1); });
-      });
-      $("root").innerHTML = `<div class="main">${renderCoupon()}<section class="filters"><button class="filter${S.winDays === 0 ? " active" : ""}" data-w="0">全部</button><button class="filter${S.winDays === 7 ? " active" : ""}" data-w="7">最近 7 天</button><button class="filter${S.winDays === 30 ? " active" : ""}" data-w="30">最近 30 天</button></section><section class="summary-grid"><article class="summary-card"><h3>好玩地点热度</h3><div id="c-loc" class="chart"></div></article><article class="summary-card"><h3>天数偏好</h3><div id="c-days" class="chart"></div></article><article class="summary-card"><h3>热门玩法标签</h3><div id="c-tags" class="chart"></div></article><article class="summary-card"><h3>总体统计</h3><div class="summary-stat"><div>统计样本：${src.length} 条</div><div>历史总记录：${S.items.length} 条</div><div>不同地点：${cLoc.size} 个</div><div>不同标签：${cTag.size} 个</div></div></article></section></div>`;
-      $("root").querySelectorAll("[data-w]").forEach((b) => b.onclick = () => { S.winDays = Number(b.dataset.w || "0") || 0; renderSummary(); });
-      disposeCharts();
-      pie("c-loc", topN(cLoc, 10));
-      bar("c-days", topN(cDays, 10), "#5e8ea1");
-      bar("c-tags", topN(cTag, 10), "#c96f4b");
-    }
-
-    function renderCurrent() {
-      $("tab-guides").classList.toggle("active", S.route === "guides");
-      $("tab-summary").classList.toggle("active", S.route === "status");
-      $("content").classList.toggle("summary-mode", S.route === "status");
-      if (S.route === "status") {
-        resetMap();
-        renderSideRoutes([]);
-        renderSummary();
-        return;
-      }
-      disposeCharts();
-      const a = S.items.find((x) => (x.id || x.key) === S.activeId);
-      if (a) renderGuide(a);
-      else {
-        renderSideRoutes([]);
-        $("root").innerHTML = `<div class="sub">请选择历史记录，或者先生成一条新的攻略。</div>`;
-      }
-    }
-
-    function applyHash() {
-      S.route = String(window.location.hash || "").toLowerCase() === "#/status" ? "status" : "guides";
-      renderCurrent();
-    }
-
-    async function loadConfig() {
-      try { const d = await api("/api/config"); S.couponUrl = String(d.couponUrl || "").trim(); }
-      catch { S.couponUrl = ""; }
-    }
-
-    async function load() {
-      try {
-        setMsg("正在加载历史...");
-        const d = await api("/api/guides");
-        S.items = (Array.isArray(d.items) ? d.items : []).map((x) => ({ ...x, id: x.id || x.key })).sort((a, b) => new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0));
-        if (!S.activeId && S.items.length) S.activeId = S.items[0].id || S.items[0].key;
-        renderLocStrip();
-        renderHistStrip();
-        renderCurrent();
-        setMsg(S.items.length ? "历史加载完成。" : "暂无历史记录。");
-      } catch (err) { setMsg(err.message || "加载失败", true); }
-    }
-
-    async function generateGuide(forceRefresh) {
-      let location = $("location").value.trim();
-      let days = Number($("days").value);
-      const useCache = forceRefresh ? false : Boolean($("use-cache").checked);
-      if ((!location || !Number.isInteger(days)) && forceRefresh) {
-        const selected = S.items.find((x) => (x.id || x.key) === S.activeId);
-        if (selected) {
-          location = String(selected.location || "").trim();
-          days = Number(selected.days);
-          if (location) $("location").value = location;
-          if (Number.isInteger(days) && days >= 1 && days <= 14) $("days").value = String(days);
-        }
-      }
-      if (!location) { setMsg("请先输入地点，或先选中一条历史记录。", true); $("location").focus(); return; }
-      if (!Number.isInteger(days) || days < 1 || days > 14) { setMsg("天数需为 1-14 的整数。", true); return; }
-      $("submit").disabled = true;
-      $("regenerate").disabled = true;
-      try {
-        setMsg(forceRefresh ? "正在重新生成（已跳过缓存）..." : (useCache ? "正在生成（会先尝试缓存命中）..." : "正在直接生成（已跳过缓存）..."));
-        const d = await api("/api/guides", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ location, days, useCache }) });
-        const rec = { ...d.item, id: d.item.id || d.item.key };
-        S.items = S.items.filter((x) => (x.id || x.key) !== (rec.id || rec.key));
-        S.items.unshift(rec);
-        S.items.sort((a, b) => new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0));
-        S.activeId = rec.id || rec.key;
-        S.activeLoc = "all";
-        renderLocStrip();
-        renderHistStrip();
-        if (S.route !== "guides") window.location.hash = "#/guides";
-        renderGuide(rec);
-        if (forceRefresh) setMsg("已重新生成并保存。");
-        else setMsg(d.cached ? "缓存命中，已打开历史记录。" : "已重新生成并保存。");
-      } catch (err) {
-        setMsg(err.message || "生成失败", true);
-      } finally {
-        $("submit").disabled = false;
-        $("regenerate").disabled = false;
-      }
-    }
-
-    $("submit").onclick = () => generateGuide(false);
-    $("regenerate").onclick = () => generateGuide(true);
-    $("reload").onclick = load;
-    $("search").oninput = () => { S.q = $("search").value || ""; renderHistStrip(); };
-    window.addEventListener("hashchange", applyHash);
-    window.addEventListener("resize", () => { S.charts.forEach((c) => { try { c.resize(); } catch {} }); if (S.map) { try { S.map.invalidateSize(); } catch {} } });
-
-    (async () => {
-      await loadConfig();
-      applyHash();
-      await load();
-    })();
+    async function renderMap(rec) { const el = $("map"); const tip = $("map-tip"); resetMap(); if (!el) return; if (!window.L) { if (tip) tip.textContent = "地图资源加载失败，请稍后刷新重试。"; return; } const points = await resolveSpots(rec.location || "", spotCandidates(rec)); if (!points.length) { if (tip) tip.textContent = text("mapNoCoords"); return; } S.map = L.map(el); L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19, attribution: "&copy; OpenStreetMap" }).addTo(S.map); S.mapLayer = L.layerGroup().addTo(S.map); const bounds = []; points.forEach((point) => { L.marker([point.lat, point.lng]).bindPopup(`<strong>${esc(point.name)}</strong><br>${esc(point.note || "")}`).addTo(S.mapLayer); bounds.push([point.lat, point.lng]); }); if (bounds.length === 1) S.map.setView(bounds[0], 13); else S.map.fitBounds(bounds, { padding: [22, 22] }); if (tip) tip.textContent = `已加载 ${formatCount(points.length)} 个坐标点`; setTimeout(() => { try { S.map && S.map.invalidateSize(); } catch {} }, 120); }
+    function resolvePromoCopy(promo) { if (!promo) return null; return { title: String(promo.title || "推荐活动").trim(), desc: String(promo.desc || promo.subtitle || "").trim(), url: String(promo.url || "").trim() }; }
+    function renderCoupon() { if (!Array.isArray(S.promotions) || !S.promotions.length) return ""; const cards = S.promotions.map((item) => resolvePromoCopy(item)).filter((item) => item?.url); if (!cards.length) return ""; return `<section class="section"><div class="promo-list">${cards.map((promo) => `<div class="promo-card"><div class="promo-main"><strong>${esc(promo.title)}</strong>${promo.desc ? `<div class="sub">${esc(promo.desc)}</div>` : ""}</div><a href="${esc(promo.url)}" target="_blank" rel="noreferrer noopener">立即查看</a></div>`).join("")}</div></section>`; }
+    function renderTextList(items, emptyText) { const values = Array.isArray(items) ? items.filter(Boolean) : []; if (!values.length) return `<div class="sub">${esc(emptyText)}</div>`; return `<ul>${values.map((item) => `<li>${esc(item)}</li>`).join("")}</ul>`; }
+    function renderSideRoutes(routes) { const box = $("side-routes"); const items = Array.isArray(routes) ? routes : []; if (!items.length) { box.innerHTML = `<div class="sub">请选择一条历史攻略后查看路线。</div>`; return; } box.innerHTML = items.map((route) => `<article class="side-route-day${route.day === S.activeRouteDay ? " active" : ""}" data-route-day="${esc(route.day)}"><b>${esc(text("dayLabel", { day: route.day }))} · ${esc(route.title || text("routeTitle", { day: route.day }))}</b>${(Array.isArray(route.steps) && route.steps.length) ? route.steps.map((step, index) => `<div class="side-route-step">${index + 1}. ${esc(step.from)} → ${esc(step.to)} · ${esc(step.transport || "-")} ${step.duration ? `· ${esc(step.duration)}` : ""}</div>`).join("") : `<div class="side-route-step">${esc(text("noRouteDetail"))}</div>`}</article>`).join(""); box.querySelectorAll("[data-route-day]").forEach((element) => { element.onclick = () => { S.activeRouteDay = Number(element.dataset.routeDay || "1") || 1; renderCurrent(); }; }); }
+    function bindGuideRouteLinkage() { document.querySelectorAll("[data-day-card]").forEach((card) => { card.onclick = () => { S.activeRouteDay = Number(card.dataset.dayCard || "1") || 1; renderCurrent(); }; }); }
+    function renderGuide(rec) { const content = rec?.content || {}; const tags = Array.isArray(content.tags) ? content.tags : []; const foods = Array.isArray(content.foods) ? content.foods : []; const hotels = Array.isArray(content.hotels) ? content.hotels : []; const tips = Array.isArray(content.tips) ? content.tips : []; const itinerary = Array.isArray(content.itinerary) ? content.itinerary : []; const routes = normalizeRoutes(rec); const budget = content.budget || {}; const routeDays = routes.map((route) => route.day); if (!routeDays.includes(S.activeRouteDay)) S.activeRouteDay = routes[0]?.day || 1; $("root").innerHTML = `<div class="main">${renderCoupon()}<section class="section hero"><h3>${esc(content.title || `${rec.location || ""}${rec.days || ""}天旅游攻略`)}</h3><div class="sub">${esc(content.summary || text("noSummary"))}</div><div class="meta"><span class="badge">${esc(text("durationDays", { count: rec.days || 0 }))}</span><span class="badge">${esc(content.bestSeason || "四季皆宜")}</span><span class="badge">${esc(content.travelStyle || "自由行")}</span></div><div>${tags.length ? tags.map((tag) => `<span class="badge">${esc(tag)}</span>`).join(" ") : `<span class="sub">${esc(text("noTags"))}</span>`}</div><div class="sub">${esc(content.prep || "")}</div><div class="sub">${esc(content.departureAdvice || "")}</div></section><section class="section"><h3>${esc(text("budgetTitle"))}</h3><div class="budget-grid"><article class="budget-card"><strong>${esc(text("transport"))}</strong><div>${esc(budget.transport || "-")}</div></article><article class="budget-card"><strong>${esc(text("hotel"))}</strong><div>${esc(budget.hotel || "-")}</div></article><article class="budget-card"><strong>${esc(text("food"))}</strong><div>${esc(budget.food || "-")}</div></article><article class="budget-card"><strong>${esc(text("misc"))}</strong><div>${esc(budget.misc || "-")}</div></article></div><div class="sub">${esc(text("budgetNote"))}</div></section><section class="section"><h3>${esc(text("itineraryTitle"))}</h3><div class="itinerary-grid">${itinerary.length ? itinerary.map((day, index) => `<article class="itinerary-card" data-day-card="${index + 1}"><strong>${esc(text("dayLabel", { day: index + 1 }))}</strong><div class="sub">${esc(day.theme || "")}</div><ul><li>${esc(day.morning || text("freeActivity"))}</li><li>${esc(day.afternoon || text("freeActivity"))}</li><li>${esc(day.evening || text("freeActivity"))}</li></ul></article>`).join("") : `<div class="sub">${esc(text("noItinerary"))}</div>`}</div></section><section class="section"><div class="tips-grid"><article class="tips-box"><h4>${esc(text("foodsHeading"))}</h4>${renderTextList(foods, text("noFood"))}</article><article class="tips-box"><h4>${esc(text("hotelsHeading"))}</h4>${renderTextList(hotels, text("noHotel"))}</article><article class="tips-box"><h4>${esc(text("tipsHeading"))}</h4>${renderTextList(tips, text("noTips"))}</article><article class="tips-box"><h4>${esc(text("notesHeading"))}</h4><div class="sub">${esc(content.audience || "")}</div></article></div></section><section class="section"><h3>${esc(text("mapTitle"))}</h3><div id="map"></div><div id="map-tip" class="sub">${esc(text("mapLoading"))}</div></section></div>`; renderSideRoutes(routes); bindGuideRouteLinkage(); renderMap(rec); }
+    function renderSummary() { const now = Date.now(); const source = S.winDays > 0 ? S.items.filter((item) => { const timestamp = Date.parse(item.updatedAt || item.createdAt || ""); return Number.isFinite(timestamp) && now - timestamp <= S.winDays * 86400000; }) : S.items; const locationMap = new Map(); const daysMap = new Map(); const tagMap = new Map(); source.forEach((item) => { const location = String(item.location || "").trim(); if (location) locationMap.set(location, (locationMap.get(location) || 0) + 1); const dayCount = Number(item.days) || 0; if (dayCount > 0) { const label = text("durationDays", { count: dayCount }); daysMap.set(label, (daysMap.get(label) || 0) + 1); } const content = item.content || {}; (Array.isArray(content.tags) ? content.tags : []).forEach((tag) => { const normalized = String(tag || "").trim(); if (normalized) tagMap.set(normalized, (tagMap.get(normalized) || 0) + 1); }); }); $("root").innerHTML = `<div class="main">${renderCoupon()}<section class="filters"><button class="filter${S.winDays === 0 ? " active" : ""}" data-w="0">${esc(text("filterAll"))}</button><button class="filter${S.winDays === 7 ? " active" : ""}" data-w="7">${esc(text("filter7"))}</button><button class="filter${S.winDays === 30 ? " active" : ""}" data-w="30">${esc(text("filter30"))}</button></section><section class="summary-grid"><article class="summary-card"><h3>${esc(text("summaryHeat"))}</h3><div id="c-loc" class="chart"></div></article><article class="summary-card"><h3>${esc(text("summaryDays"))}</h3><div id="c-days" class="chart"></div></article><article class="summary-card"><h3>${esc(text("summaryTags"))}</h3><div id="c-tags" class="chart"></div></article><article class="summary-card"><h3>${esc(text("summaryOverall"))}</h3><div class="summary-stat"><div>${esc(text("summarySample", { count: source.length }))}</div><div>${esc(text("summaryTotal", { count: S.items.length }))}</div><div>${esc(text("summaryLocations", { count: locationMap.size }))}</div><div>${esc(text("summaryTagsCount", { count: tagMap.size }))}</div></div></article></section></div>`; $("root").querySelectorAll("[data-w]").forEach((button) => { button.onclick = () => { S.winDays = Number(button.dataset.w || "0") || 0; renderSummary(); }; }); disposeCharts(); pie("c-loc", topN(locationMap, 10)); bar("c-days", topN(daysMap, 10), "#5e8ea1"); bar("c-tags", topN(tagMap, 10), "#c96f4b"); }
+    function renderCurrent() { $("tab-guides").classList.toggle("active", S.route === "guides"); $("tab-summary").classList.toggle("active", S.route === "status"); $("content").classList.toggle("summary-mode", S.route === "status"); if (S.route === "status") { resetMap(); renderSideRoutes([]); renderSummary(); return; } disposeCharts(); const active = S.items.find((item) => (item.id || item.key) === S.activeId); if (active) renderGuide(active); else { renderSideRoutes([]); $("root").innerHTML = `<div class="sub">请选择历史记录，或者先生成一条新的攻略。</div>`; } }
+    function applyHash() { S.route = String(window.location.hash || "").toLowerCase() === "#/status" ? "status" : "guides"; renderCurrent(); }
+    async function loadConfig() { try { const data = await api("/api/config"); S.promotions = Array.isArray(data.promotions) ? data.promotions : []; } catch { S.promotions = []; } }
+    async function load() { try { setMsg(text("loadingHistory")); const data = await api("/api/guides"); S.items = (Array.isArray(data.items) ? data.items : []).map((item) => ({ ...item, id: item.id || item.key })).sort((a, b) => new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0)); if (!S.activeId && S.items.length) S.activeId = S.items[0].id || S.items[0].key; renderLocStrip(); renderHistStrip(); renderCurrent(); setMsg(S.items.length ? text("historyLoaded") : text("noHistory")); } catch (error) { setMsg(error.message || text("loadFailed"), true); } }
+    async function generateGuide(forceRefresh) { let location = $("location").value.trim(); let days = Number($("days").value); const referenceSpots = $("use-reference-spots")?.checked ? parseReferenceSpots($("reference-spots")?.value || "") : []; const useCache = forceRefresh ? false : Boolean($("use-cache").checked); if ((!location || !Number.isInteger(days)) && forceRefresh) { const selected = S.items.find((item) => (item.id || item.key) === S.activeId); if (selected) { location = String(selected.location || "").trim(); days = Number(selected.days); if (location) $("location").value = location; if (Number.isInteger(days) && days >= 1 && days <= 14) $("days").value = String(days); } } if (!location) { setMsg(text("inputLocationFirst"), true); $("location").focus(); return; } if (!Number.isInteger(days) || days < 1 || days > 14) { setMsg(text("invalidDays"), true); return; } $("submit").disabled = true; $("regenerate").disabled = true; try { setMsg(forceRefresh ? text("regeneratingSkipCache") : (useCache ? text("generatingWithCache") : text("generatingSkipCache"))); const data = await api("/api/guides", { method: "POST", body: { location, days, useCache, referenceSpots } }); const record = { ...data.item, id: data.item.id || data.item.key }; S.items = S.items.filter((item) => (item.id || item.key) !== (record.id || record.key)); S.items.unshift(record); S.items.sort((a, b) => new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0)); S.activeId = record.id || record.key; S.activeLoc = "all"; renderLocStrip(); renderHistStrip(); if (S.route !== "guides") window.location.hash = "#/guides"; renderGuide(record); setMsg(forceRefresh ? text("regeneratedSaved") : (data.cached ? text("cacheOpened") : text("regeneratedSaved"))); } catch (error) { setMsg(error.message || text("generateFailed"), true); } finally { $("submit").disabled = false; $("regenerate").disabled = false; } }
+    $("submit").onclick = () => generateGuide(false); $("regenerate").onclick = () => generateGuide(true); $("reload").onclick = load; $("search").oninput = () => { S.q = $("search").value || ""; renderHistStrip(); }; $("use-reference-spots").onchange = syncReferenceSpotsUi; window.addEventListener("hashchange", applyHash); window.addEventListener("resize", () => { S.charts.forEach((chart) => { try { chart.resize(); } catch {} }); if (S.map) { try { S.map.invalidateSize(); } catch {} } }); (async () => { syncReferenceSpotsUi(); await loadConfig(); await load(); })();
   </script>
 </body>
 </html>

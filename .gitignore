@@ -1,3 +1,5 @@
 node_modules
 .env
 .ace-tool/
+.claude/
+.playwright-mcp/

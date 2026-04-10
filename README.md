@@ -1,73 +1,93 @@
 # Travel Guide Generator
 
-旅游攻略生成器（Node.js + 单页前端）：
-- 输入地点和天数，生成旅游攻略
-- 支持缓存命中 / 强制重生成
-- 历史记录支持同地点多条
-- 状态页支持多维统计（含最近 7 天 / 30 天）
-- 地图使用 OpenStreetMap（Leaflet）展示景点位置
+一个纯单语言的旅行攻略生成器，前端为单页静态页面，后端为 `Node.js` 服务，支持历史记录、景点地图、广告位配置和健康检查接口。
 
-## Database
+## 功能
 
-已切换为 **Neon PostgreSQL**（Vercel 推荐）：
-- 环境变量优先读取 `POSTGRES_URL`
-- 兼容读取 `DATABASE_URL` / `NEON_DATABASE_URL`
-- 服务启动后会自动创建 `guides` 表和索引
+- 生成并保存旅行攻略
+- 查看历史记录、按地点筛选、删除记录
+- 展示每日行程、预算、路线和景点地图
+- 展示可配置广告卡片列表
+- 保留 Google 统计/追踪与 Vercel Analytics 注入
 
-## Environment
+## 环境变量
 
-参考 `.env.example`：
+参考 `C:\Users\lee\Desktop\ai\share\.env.example`
 
 ```env
 PORT=3000
 POSTGRES_URL=postgresql://user:password@host/dbname?sslmode=require
-
+PROMOTIONS_JSON=[{"title":"酒店优惠","desc":"限时活动","url":"https://example.com/deal"}]
+GEOCODE_USER_AGENT=travel-guide-app/1.0
 baseurl=https://api.openai.com/v1
 apikey=your_api_key
 modelname=gpt-4o-mini
-
 DELETE_PASSWORD=your_delete_password
 ```
 
-## Run
+- `PORT`：服务端口，默认 `3000`
+- `POSTGRES_URL`：PostgreSQL 连接串
+- `PROMOTIONS_JSON`：广告卡片列表，格式为 `[{"title":"xx","desc":"","url":"https://..."}]`
+- `GEOCODE_USER_AGENT`：地理编码请求的 `User-Agent`
+- `baseurl` / `apikey` / `modelname`：模型接口配置
+- `DELETE_PASSWORD`：删除历史记录接口密码
+
+## 启动
 
 ```bash
 npm install
 npm start
 ```
 
-打开 `http://localhost:3000`
+如果 `3000` 端口被占用，服务会自动回退到下一个可用端口。
 
 ## API
 
-### GET `/api/guides`
+### `GET /api/health`
 
-查询历史攻略。
+返回服务健康状态。
 
-可选参数：
-- `location`：按地点模糊筛选
+### `GET /api/config`
 
-### POST `/api/guides`
+返回前端配置：
 
-创建攻略或命中缓存。
+- `promotions`
+
+### `GET /api/guides`
+
+返回历史攻略列表。
+
+查询参数：
+
+- `location`：按地点过滤
+
+### `POST /api/guides`
+
+生成并保存攻略。
 
 请求体：
 
 ```json
 {
-  "location": "成都",
+  "location": "杭州",
   "days": 2,
-  "useCache": true
+  "useCache": true,
+  "referenceSpots": ["西湖", "灵隐寺"]
 }
 ```
 
-说明：
-- `useCache=true`：优先命中缓存
-- `useCache=false`：跳过缓存，直接重生成并入库
+### `GET /api/geocode`
 
-### DELETE `/api/guides/:id`
+地理编码查询。
 
-删除历史记录（也兼容旧 `key` 删除）。
+查询参数：
+
+- `q`：地点或景点名称
+- `city`：可选城市上下文
+
+### `DELETE /api/guides/:id`
+
+删除指定攻略。
 
 请求体：
 
@@ -77,12 +97,13 @@ npm start
 }
 ```
 
-## Vercel + Neon
+## 静态资源
 
-在 Vercel Project 环境变量里至少配置：
-- `POSTGRES_URL`（来自 Vercel Neon 集成）
-- `baseurl`
-- `apikey`
-- `modelname`
-- `DELETE_PASSWORD`
+服务会直接托管以下静态资源类型：
 
+- `index.html`
+- `js` / `mjs` / `css`
+- `png` / `jpg` / `jpeg` / `svg` / `webp` / `ico`
+- `json` / `txt` / `map`
+
+前端通过 `GET /api/config` 读取广告卡片配置。
