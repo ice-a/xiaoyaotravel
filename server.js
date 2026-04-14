@@ -18,6 +18,7 @@ const POSTGRES_URL = readEnv(["POSTGRES_URL", "DATABASE_URL", "NEON_DATABASE_URL
 const DELETE_PASSWORD = readEnv(["DELETE_PASSWORD", "delete_password"]);
 const PROMOTIONS_JSON = readEnv(["PROMOTIONS_JSON", "promotions_json"]);
 const GEOCODE_USER_AGENT = readEnv(["GEOCODE_USER_AGENT", "geocode_user_agent"]) || "travel-guide-app/1.0";
+const GYG_PARTNER_ID = "7JREU1P";
 
 let pgPool;
 let dbReadyPromise;
@@ -65,6 +66,7 @@ const TEXT = {
   departureAdvice: "建议早上出发，尽早处理行李和第一站安排。",
   systemPrompt: "你是旅行规划师，只返回严格 JSON。",
   promptIntro: "你是专业旅游规划师，请生成可执行、预算友好的旅游攻略。",
+  promptLanguage: ({ lang }) => `请使用以下语言生成内容：${lang === "en" ? "English" : "简体中文"}。`,
   promptLocation: ({ location }) => `地点：${location}`,
   promptDays: ({ days }) => `天数：${days}天`,
   promptBudget: ({ budgetHint }) => `预算限制（优先参考历史价格，避免高价）：${budgetHint}`,
@@ -116,6 +118,14 @@ function buildPromotions() {
   };
 
   parsePromotions(PROMOTIONS_JSON).forEach(pushPromo);
+
+  promotions.push({
+    id: "booking-default",
+    title: "Booking.com 酒店预订",
+    subtitle: "全球海量酒店，低价保障",
+    url: "https://www.booking.com/index.html?aid=1662037",
+    ctaText: "立即查看"
+  });
 
   return promotions;
 }
@@ -456,7 +466,7 @@ function extractJson(textValue) {
   return JSON.parse(fenced ? fenced[1] : trimmed);
 }
 
-function buildPrompt(location, days, budgetCaps, referenceSpots) {
+function buildPrompt(location, days, budgetCaps) {
   const budgetHint = [
     text("promptBudgetLineTransport", { value: Math.round(budgetCaps.transport) }),
     text("promptBudgetLineHotel", { value: Math.round(budgetCaps.hotel) }),
@@ -464,9 +474,7 @@ function buildPrompt(location, days, budgetCaps, referenceSpots) {
     text("promptBudgetLineMisc", { value: Math.round(budgetCaps.misc) }),
   ].join("，");
 
-  const validSpots = Array.isArray(referenceSpots)
-    ? referenceSpots.map((spot) => String(spot || "").trim()).filter(Boolean).slice(0, 8)
-    : [];
+  const validSpots = [];
 
   const spotsLine = validSpots.length
     ? text("promptReferenceSpots", { spots: validSpots.join("、") })
@@ -477,7 +485,6 @@ function buildPrompt(location, days, budgetCaps, referenceSpots) {
     text("promptLocation", { location }),
     text("promptDays", { days }),
     text("promptBudget", { budgetHint }),
-    spotsLine,
     text("promptEconomy"),
     text("promptJsonOnly"),
     "{",
@@ -500,13 +507,13 @@ function buildPrompt(location, days, budgetCaps, referenceSpots) {
   ].filter(Boolean).join("\n");
 }
 
-async function generateGuide(location, days, budgetCaps, referenceSpots) {
+async function generateGuide(location, days, budgetCaps) {
   const baseUrl = (readEnv(["OPENAI_BASEURL", "baseurl"]) || "").replace(/\/+$/, "");
   const apiKey = readEnv(["OPENAI_APIKEY", "apikey"]);
   const modelName = readEnv(["OPENAI_MODELNAME", "modelname"]);
   if (!baseUrl || !apiKey || !modelName) throw new Error(text("missingModelEnv"));
 
-  const prompt = buildPrompt(location, days, budgetCaps, referenceSpots);
+  const prompt = buildPrompt(location, days, budgetCaps);
 
   let response;
   try {
@@ -612,8 +619,7 @@ async function getOrCreateGuide(location, days, options = {}) {
   }
 
   const budgetCaps = await getBudgetGuidance(pool, location);
-  const referenceSpots = Array.isArray(options.referenceSpots) ? options.referenceSpots : [];
-  const content = await generateGuide(location, days, budgetCaps, referenceSpots);
+  const content = await generateGuide(location, days, budgetCaps);
   const now = new Date().toISOString();
   const id = buildGuideId();
   const templateId = randomTemplateId();
@@ -718,9 +724,6 @@ async function handleApi(req, res, url) {
     const location = String(body.location || "").trim();
     const days = Number(body.days);
     const useCache = body.useCache !== false;
-    const referenceSpots = Array.isArray(body.referenceSpots)
-      ? body.referenceSpots.map((spot) => String(spot || "").trim()).filter(Boolean).slice(0, 8)
-      : [];
 
     if (!location) {
       sendJson(res, 400, { error: text("locationEmpty") });
@@ -732,7 +735,7 @@ async function handleApi(req, res, url) {
       return;
     }
 
-    const result = await getOrCreateGuide(location, days, { useCache, referenceSpots });
+    const result = await getOrCreateGuide(location, days, { useCache });
     sendJson(res, 200, result);
     return;
   }
