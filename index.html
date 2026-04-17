@@ -965,7 +965,7 @@
 
   <!-- Privacy Policy Modal -->
   <div id="privacy-modal" class="modal-overlay hidden">
-    <div class="modal" style="max-width:640px;max-height:80vh;overflow-y:auto;">
+    <div class="modal-box" style="max-width:640px;max-height:80vh;overflow-y:auto;padding:28px 24px;">
       <h3>隐私政策</h3>
       <div style="text-align:left;font-size:13px;line-height:1.8;color:var(--ink);">
         <p><strong>最后更新：2026年4月17日</strong></p>
@@ -989,7 +989,7 @@
         <p>我们使用行业标准的安全措施来保护您的数据。用户密钥经 SHA256 不可逆哈希后存储，数据库连接使用 SSL 加密。</p>
         <h4 style="margin-top:16px;font-size:14px;">6. 联系我们</h4>
         <p>如果您对本隐私政策有任何疑问，请通过以下方式联系我们：</p>
-        <p>Email: <a href="mailto:xiaoyao@020417.xyz" style="color:var(--brand);">xiaoyao@020417.xyz</a></p>
+        <p>Email: <a href="mailto:leebigshan@gmail.com" style="color:var(--brand);">leebigshan@gmail.com</a></p>
       </div>
       <button id="btn-privacy-close" style="margin-top:16px;width:100%;padding:8px;border:1px solid var(--line);background:var(--card);border-radius:var(--radius-sm);font-size:13px;font-weight:600;cursor:pointer;">关闭</button>
     </div>
@@ -997,7 +997,7 @@
 
   <!-- Terms of Service Modal -->
   <div id="terms-modal" class="modal-overlay hidden">
-    <div class="modal" style="max-width:640px;max-height:80vh;overflow-y:auto;">
+    <div class="modal-box" style="max-width:640px;max-height:80vh;overflow-y:auto;padding:28px 24px;">
       <h3>服务条款</h3>
       <div style="text-align:left;font-size:13px;line-height:1.8;color:var(--ink);">
         <p><strong>最后更新：2026年4月17日</strong></p>
@@ -1814,6 +1814,19 @@
       panel.scrollIntoView({ behavior: "smooth" });
       document.getElementById("compare-close").onclick = () => panel.remove();
     }
+    // 刷新动态注入的广告位（innerHTML 插入的 <script> 不会自动执行）
+    function refreshAds() {
+      try {
+        document.querySelectorAll(".ad-slot ins.adsbygoogle").forEach(ins => {
+          // 跳过占位符广告位（未配置真实 slot ID）
+          if (ins.dataset.adSlot === "XXXXXXX") return;
+          if (!ins.dataset.pushed) {
+            (window.adsbygoogle = window.adsbygoogle || []).push({});
+            ins.dataset.pushed = "1";
+          }
+        });
+      } catch { /* AdSense not loaded */ }
+    }
     function renderGuide(rec) {
       const content = rec?.content || {};
       const tags = Array.isArray(content.tags) ? content.tags : [];
@@ -1827,7 +1840,6 @@
       if (!routeDays.includes(S.activeRouteDay)) S.activeRouteDay = routes[0]?.day || 1;
 
       $("root").innerHTML = `
-        ${renderCoupon(rec.location)}
         <section class="section hero">
           <h3>${esc(content.title || (S.lang === "en" ? `${rec.location || ""} ${rec.days || ""} Days Guide` : `${rec.location || ""} ${rec.days || ""}天旅游攻略`))}</h3>
           <div class="sub">${esc(content.summary || text("noSummary"))}</div>
@@ -1840,12 +1852,6 @@
           </div>
           ${tags.length ? `<div class="meta" style="margin-top:4px;">${tags.map((tag) => `<span class="badge badge-tag">${esc(tag)}</span>`).join(" ")}</div>` : ""}
         </section>
-
-        <!-- Google AdSense: 攻略详情页广告位 -->
-        <div style="margin-bottom:14px; text-align:center; min-height:90px;">
-          <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-8097273255284826" data-ad-slot="auto" data-ad-format="auto" data-full-width-responsive="true"></ins>
-          <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
-        </div>
 
         <section id="weather-section" class="section weather-section" style="display:none;">
           <h3>${esc(S.lang === "en" ? "7-Day Weather" : "7日天气预报")}</h3>
@@ -1879,7 +1885,7 @@
           ${itinerary.length > 0 ? (() => {
             const activeDayIdx = Math.min((S.activeRouteDay || 1) - 1, itinerary.length - 1);
             const activeDay = itinerary[activeDayIdx] || {};
-            const coverSrc = `https://bing.img.run/rand_uhd.php`;
+            const coverSrc = `https://t.alcy.cc/moe`;
             const slotData = [
               { key: "morning", label: text("morning"), time: "09:00–12:00", value: activeDay.morning, cls: "" },
               { key: "afternoon", label: text("afternoon"), time: "12:00–18:00", value: activeDay.afternoon, cls: "afternoon" },
@@ -1969,8 +1975,11 @@
             </article>
           </div>
         </section>
+        <!-- Google AdSense: 攻略详情页 - 美食住宿与评分之间（需在 AdSense 后台创建广告单元） -->
+        <div class="ad-slot" style="margin:14px 0; text-align:center; min-height:90px;">
+          <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-8097273255284826" data-ad-slot="XXXXXXX" data-ad-format="auto" data-full-width-responsive="true"></ins>
+        </div>
         <section class="section" style="padding:12px 16px;">
-          <div class="rating-aggregate" id="rating-aggregate">
             <div class="rating-aggregate-head">
               <div class="rating-big-num" id="rating-avg">--</div>
               <div>
@@ -2235,6 +2244,7 @@
           };
         });
       }
+      refreshAds();
     }
     function renderSummary() {
       disposeCharts();
@@ -2377,10 +2387,9 @@
           </div>
         </section>
 
-        <!-- Google AdSense: 首页广告位 -->
-        <div style="margin-top:14px; text-align:center; min-height:90px;">
-          <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-8097273255284826" data-ad-slot="auto" data-ad-format="auto" data-full-width-responsive="true"></ins>
-          <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+        <!-- Google AdSense: 汇总页广告位（需在 AdSense 后台创建"展示广告"单元，将 data-ad-slot 替换为真实值） -->
+        <div class="ad-slot" style="margin-top:14px; text-align:center; min-height:90px;">
+          <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-8097273255284826" data-ad-slot="XXXXXXX" data-ad-format="auto" data-full-width-responsive="true"></ins>
         </div>
       `;
 
@@ -2406,6 +2415,7 @@
           window.scrollTo({ top: 0, behavior: "smooth" });
         };
       });
+      refreshAds();
     }
 
     function parsePriceMax(textValue) {
@@ -2641,7 +2651,7 @@
     <div style="display:flex;justify-content:center;gap:16px;flex-wrap:wrap;margin-bottom:8px;">
       <a href="javascript:void(0)" id="link-privacy" style="color:var(--sub);text-decoration:none;">隐私政策</a>
       <a href="javascript:void(0)" id="link-terms" style="color:var(--sub);text-decoration:none;">服务条款</a>
-      <a href="mailto:xiaoyao@020417.xyz" style="color:var(--sub);text-decoration:none;">联系我们</a>
+      <a href="mailto:leebigshan@gmail.com" style="color:var(--sub);text-decoration:none;">联系我们</a>
     </div>
     <div>© 2026 逍遥游 Xiaoyao Travel. All rights reserved.</div>
   </footer>

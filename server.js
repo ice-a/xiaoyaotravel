@@ -540,13 +540,15 @@ async function readBody(req) {
 function sanitizePostgresUrl(url) {
   if (!url) return url;
   try {
-    // Node.js pg 库不支持 channel_binding 参数，需要移除
     const parsed = new URL(url);
+    // Node.js pg 库不支持 channel_binding 参数，需要移除
     parsed.searchParams.delete("channel_binding");
-    return parsed.toString();
+    // 提取 sslmode 并从 URL 中移除（由 pgPool 配置统一处理）
+    const sslmode = parsed.searchParams.get("sslmode");
+    parsed.searchParams.delete("sslmode");
+    return { connectionString: parsed.toString(), sslmode };
   } catch {
-    // 若 URL 解析失败则原样返回
-    return url;
+    return { connectionString: url, sslmode: null };
   }
 }
 
@@ -554,8 +556,14 @@ async function getPool() {
   if (!POSTGRES_URL) throw new Error(text("missingPostgres"));
 
   if (!pgPool) {
-    const safeUrl = sanitizePostgresUrl(POSTGRES_URL);
-    pgPool = new Pool({ connectionString: safeUrl, ssl: { rejectUnauthorized: false } });
+    const { connectionString: safeUrl, sslmode } = sanitizePostgresUrl(POSTGRES_URL);
+    // 根据 sslmode 决定 SSL 配置，避免 rejectUnauthorized 警告
+    const sslConfig = (sslmode === "disable" || sslmode === "prefer" && false)
+      ? false
+      : sslmode === "require" || sslmode === "verify-ca" || sslmode === "verify-full"
+        ? { rejectUnauthorized: sslmode !== "require" }
+        : { rejectUnauthorized: false }; // 默认兼容 Neon 等云数据库
+    pgPool = new Pool({ connectionString: safeUrl, ssl: sslConfig });
   }
 
   if (!dbReadyPromise) {
@@ -955,54 +963,65 @@ async function getOrCreateGuide(location, days, options = {}) {
 
 async function geocodeByQuery(query) {
   if (!query) return null;
+  const t = query.trim();
 
   // 使用 Open-Meteo Geocoding API（支持中文搜索）
-  const url = `${GEOCODING_API_BASE}/search?name=${encodeURIComponent(query.trim())}&count=1&language=zh&format=json`;
+  // 对于部分中文城市（如泉州、莆田等），Open-Meteo 可能找不到，需要尝试多种变体
+  const names = [t];
+  if (!t.includes("市") && !t.includes("县") && !t.includes("区") && !t.includes("省")) {
+    names.push(`${t}市`);
+  }
+  // 简体中文 → 繁体中文（覆盖台湾/香港地名）
+  const tradMap = { "泉": "泉", "台": "臺", "广": "廣", "东": "東", "华": "華", "马": "馬", "龙": "龍", "长": "長", "关": "關", "风": "風", "云": "雲", "台湾": "臺灣" };
+  if (Object.keys(tradMap).some(k => t.includes(k))) {
+    let trad = t;
+    for (const [s, t2] of Object.entries(tradMap)) trad = trad.replace(new RegExp(s, "g"), t2);
+    if (trad !== t && !names.includes(trad)) names.push(trad);
+  }
 
-  try {
-    const response = await fetch(url, {
-      headers: { Accept: "application/json" },
-    });
-    const data = await response.json().catch(() => ({}));
-    if (data.results && Array.isArray(data.results) && data.results.length > 0) {
-      const item = data.results[0];
-      return {
-        lat: Number(item.latitude),
-        lng: Number(item.longitude),
-        name: String(item.name || query),
-      };
+  for (const name of names) {
+    const url = `${GEOCODING_API_BASE}/search?name=${encodeURIComponent(name)}&count=1&language=zh&format=json`;
+    try {
+      const response = await fetch(url, { headers: { Accept: "application/json" } });
+      const data = await response.json().catch(() => ({}));
+      if (data.results && Array.isArray(data.results) && data.results.length > 0) {
+        const item = data.results[0];
+        return { lat: Number(item.latitude), lng: Number(item.longitude), name: String(item.name || query) };
+      }
+    } catch (err) {
+      console.warn("[geocode-warn] Open-Meteo Geocoding 失败:", name, err.message);
     }
-  } catch (err) {
-    console.warn("[geocode-warn] Open-Meteo Geocoding 失败，尝试 Nominatim fallback:", err.message);
   }
 
-  // Fallback: OpenStreetMap Nominatim（对中文支持较差，但作为兜底保留）
-  const variants = [query.trim()];
-  const t = query.trim();
-  if (!t.includes("市") && !t.includes("县") && !t.includes("区")) {
-    variants.push(`${t}市`, `${t}市 中国`);
-  }
-  if (!t.includes("中国") && !t.includes("China")) {
-    variants.push(`${t} 中国`);
-  }
+  // Fallback: OpenStreetMap Nominatim
+  const variants = [t];
+  if (!t.includes("市") && !t.includes("县") && !t.includes("区")) variants.push(`${t}市`, `${t}市 中国`);
+  if (!t.includes("中国") && !t.includes("China")) variants.push(`${t} 中国`);
 
   for (const q of variants) {
     const fallbackUrl = `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&q=${encodeURIComponent(q)}`;
     try {
       const response = await fetch(fallbackUrl, {
-        headers: {
-          Accept: "application/json",
-          "User-Agent": GEOCODE_USER_AGENT,
-        },
+        headers: { Accept: "application/json", "User-Agent": GEOCODE_USER_AGENT },
       });
+      if (response.status === 429) {
+        // Nominatim 限流，等 1 秒重试一次
+        console.warn("[geocode-warn] Nominatim 429 rate limited, retrying after 1s...");
+        await new Promise(r => setTimeout(r, 1100));
+        const retry = await fetch(fallbackUrl, {
+          headers: { Accept: "application/json", "User-Agent": GEOCODE_USER_AGENT },
+        });
+        const retryData = await retry.json().catch(() => []);
+        if (Array.isArray(retryData) && retryData.length) {
+          const item = retryData[0];
+          return { lat: Number(item.lat), lng: Number(item.lon), name: String(item.display_name || "") };
+        }
+        continue;
+      }
       const data = await response.json().catch(() => []);
       if (Array.isArray(data) && data.length) {
         const item = data[0];
-        return {
-          lat: Number(item.lat),
-          lng: Number(item.lon),
-          name: String(item.display_name || ""),
-        };
+        return { lat: Number(item.lat), lng: Number(item.lon), name: String(item.display_name || "") };
       }
     } catch {
       // fall through
