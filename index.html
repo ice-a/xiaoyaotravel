@@ -963,6 +963,62 @@
     </div>
   </div>
 
+  <!-- Privacy Policy Modal -->
+  <div id="privacy-modal" class="modal-overlay hidden">
+    <div class="modal" style="max-width:640px;max-height:80vh;overflow-y:auto;">
+      <h3>隐私政策</h3>
+      <div style="text-align:left;font-size:13px;line-height:1.8;color:var(--ink);">
+        <p><strong>最后更新：2026年4月17日</strong></p>
+        <p>欢迎访问「逍遥游」（xiaoyao-travel）。我们非常重视您的隐私保护。本隐私政策说明了我们如何收集、使用和保护您的信息。</p>
+        <h4 style="margin-top:16px;font-size:14px;">1. 我们收集的信息</h4>
+        <p><strong>您主动提供的信息：</strong>当您注册账号时，我们会收集您设置的用户名和密钥（经 SHA256 哈希加密存储，我们无法读取原始密钥）。</p>
+        <p><strong>自动收集的信息：</strong>我们使用第三方服务来自动收集某些信息，以改善网站体验和投放广告。</p>
+        <h4 style="margin-top:16px;font-size:14px;">2. Cookie 和第三方技术</h4>
+        <p>本网站使用以下第三方服务，它们可能会在您的浏览器中放置 Cookie：</p>
+        <ul style="padding-left:20px;margin:8px 0;">
+          <li><strong>Google AdSense：</strong>用于投放个性化广告。Google 及其合作伙伴可能会使用 Cookie 来根据您的浏览历史展示相关广告。您可以访问 <a href="https://www.google.com/settings/ads" target="_blank" rel="noreferrer" style="color:var(--brand);">Google 广告设置</a> 退出个性化广告。</li>
+          <li><strong>Microsoft Clarity：</strong>用于匿名网站行为分析（热力图、会话录制），不收集个人身份信息。详情请参阅 <a href="https://privacy.microsoft.com/zh-cn/privacystatement" target="_blank" rel="noreferrer" style="color:var(--brand);">微软隐私声明</a>。</li>
+          <li><strong>Vercel Analytics：</strong>用于匿名访问统计。详情请参阅 <a href="https://vercel.com/docs/concepts/analytics/privacy" target="_blank" rel="noreferrer" style="color:var(--brand);">Vercel Analytics 隐私政策</a>。</li>
+        </ul>
+        <p>您可以通过浏览器设置管理或禁用 Cookie，但这可能影响部分功能。</p>
+        <h4 style="margin-top:16px;font-size:14px;">3. 我们如何使用信息</h4>
+        <p>我们收集的信息用于：提供和维护网站功能（生成旅行攻略、收藏、打卡等）；改善用户体验；投放广告以支持网站运营。</p>
+        <h4 style="margin-top:16px;font-size:14px;">4. 信息共享</h4>
+        <p>我们不会出售您的个人信息。除以下情况外，我们不会与第三方共享您的信息：为投放广告而与 Google 共享非个人身份的浏览数据；为提供网站服务而使用必要的技术服务商。</p>
+        <h4 style="margin-top:16px;font-size:14px;">5. 数据安全</h4>
+        <p>我们使用行业标准的安全措施来保护您的数据。用户密钥经 SHA256 不可逆哈希后存储，数据库连接使用 SSL 加密。</p>
+        <h4 style="margin-top:16px;font-size:14px;">6. 联系我们</h4>
+        <p>如果您对本隐私政策有任何疑问，请通过以下方式联系我们：</p>
+        <p>Email: <a href="mailto:xiaoyao@020417.xyz" style="color:var(--brand);">xiaoyao@020417.xyz</a></p>
+      </div>
+      <button id="btn-privacy-close" style="margin-top:16px;width:100%;padding:8px;border:1px solid var(--line);background:var(--card);border-radius:var(--radius-sm);font-size:13px;font-weight:600;cursor:pointer;">关闭</button>
+    </div>
+  </div>
+
+  <!-- Terms of Service Modal -->
+  <div id="terms-modal" class="modal-overlay hidden">
+    <div class="modal" style="max-width:640px;max-height:80vh;overflow-y:auto;">
+      <h3>服务条款</h3>
+      <div style="text-align:left;font-size:13px;line-height:1.8;color:var(--ink);">
+        <p><strong>最后更新：2026年4月17日</strong></p>
+        <p>使用「逍遥游」服务即表示您同意以下条款。请仔细阅读。</p>
+        <h4 style="margin-top:16px;font-size:14px;">1. 服务说明</h4>
+        <p>「逍遥游」是一个 AI 驱动的旅行攻略生成工具。我们利用人工智能技术为您提供旅行建议，但内容仅供参考，不构成专业旅行建议。实际旅行安排请以官方信息为准。</p>
+        <h4 style="margin-top:16px;font-size:14px;">2. 用户责任</h4>
+        <p>您有责任保护自己的账号安全。请勿与他人共享您的密钥。您对通过您的账号产生的所有行为负责。</p>
+        <h4 style="margin-top:16px;font-size:14px;">3. 内容使用</h4>
+        <p>本网站生成的内容由 AI 模型产生，可能存在不准确之处。我们不对 AI 生成内容的准确性、完整性或时效性做出保证。用户应自行验证旅行相关信息的准确性。</p>
+        <h4 style="margin-top:16px;font-size:14px;">4. 知识产权</h4>
+        <p>网站的设计、代码和品牌标识归「逍遥游」所有。您生成的攻略内容归您个人使用。禁止将本网站用于任何违法目的。</p>
+        <h4 style="margin-top:16px;font-size:14px;">5. 免责声明</h4>
+        <p>本网站按「现状」提供服务，不作任何明示或暗示的保证。我们不对因使用本网站而产生的任何直接、间接、附带或后果性损失负责。</p>
+        <h4 style="margin-top:16px;font-size:14px;">6. 条款变更</h4>
+        <p>我们保留随时修改本服务条款的权利。修改后的条款将在本页面发布，继续使用本网站即视为同意修改后的条款。</p>
+      </div>
+      <button id="btn-terms-close" style="margin-top:16px;width:100%;padding:8px;border:1px solid var(--line);background:var(--card);border-radius:var(--radius-sm);font-size:13px;font-weight:600;cursor:pointer;">关闭</button>
+    </div>
+  </div>
+
   <!-- Toolbar row -->
   <div class="toolbar-row">
     <input id="search" placeholder="搜索历史记录…" />
@@ -2578,6 +2634,25 @@
       if (params.get("share")) return; // applyHash 会处理
       applyHash();
     })();
+  </script>
+
+  <!-- Footer -->
+  <footer id="site-footer" style="text-align:center;padding:20px 16px 32px;font-size:11px;color:var(--sub);border-top:1px solid var(--line-soft);margin-top:24px;">
+    <div style="display:flex;justify-content:center;gap:16px;flex-wrap:wrap;margin-bottom:8px;">
+      <a href="javascript:void(0)" id="link-privacy" style="color:var(--sub);text-decoration:none;">隐私政策</a>
+      <a href="javascript:void(0)" id="link-terms" style="color:var(--sub);text-decoration:none;">服务条款</a>
+      <a href="mailto:xiaoyao@020417.xyz" style="color:var(--sub);text-decoration:none;">联系我们</a>
+    </div>
+    <div>© 2026 逍遥游 Xiaoyao Travel. All rights reserved.</div>
+  </footer>
+
+  <script>
+    document.getElementById("link-privacy").onclick = () => document.getElementById("privacy-modal").classList.remove("hidden");
+    document.getElementById("btn-privacy-close").onclick = () => document.getElementById("privacy-modal").classList.add("hidden");
+    document.getElementById("privacy-modal").addEventListener("click", e => { if(e.target.id==="privacy-modal") e.target.classList.add("hidden"); });
+    document.getElementById("link-terms").onclick = () => document.getElementById("terms-modal").classList.remove("hidden");
+    document.getElementById("btn-terms-close").onclick = () => document.getElementById("terms-modal").classList.add("hidden");
+    document.getElementById("terms-modal").addEventListener("click", e => { if(e.target.id==="terms-modal") e.target.classList.add("hidden"); });
   </script>
 </body>
 </html>

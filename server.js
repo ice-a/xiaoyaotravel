@@ -34,7 +34,6 @@ const DATACARD_PROMO_DESC = readEnv(["DATACARD_PROMO_DESC", "datacard_promo_desc
 const DATACARD_PROMO_URL = readEnv(["DATACARD_PROMO_URL", "datacard_promo_url"]);
 const DATACARD_PROMO_CTA = readEnv(["DATACARD_PROMO_CTA", "datacard_promo_cta"]);
 const GEOCODE_USER_AGENT = readEnv(["GEOCODE_USER_AGENT", "geocode_user_agent"]) || "travel-guide-app/1.0";
-const GYG_PARTNER_ID = "7JREU1P";
 
 // ── Auth: SHA256 hash + user cache ──
 function sha256(str) {

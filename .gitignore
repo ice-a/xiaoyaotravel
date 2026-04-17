@@ -1,5 +1,40 @@
-node_modules
+# Dependencies
+node_modules/
+
+# Environment
 .env
+.env.local
+.env.production
+
+# Logs
+*.log
+logs/
+_stderr.log
+_stdout.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Test screenshots
+_panel_test.png
+_profile_test.png
+
+# WorkBuddy
+.workbuddy/
+
+# AI/Tool configs
 .ace-tool/
 .claude/
 .playwright-mcp/
+
+# Build artifacts
+dist/
+.vercel/
