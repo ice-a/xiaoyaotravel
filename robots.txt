@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap:https://travel.020417.xyz/sitemap.xml

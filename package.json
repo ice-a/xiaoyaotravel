@@ -1,11 +1,12 @@
 {
-  "name": "travel-guide-generator",
+  "name": "xiaoyao-travel",
   "version": "1.0.0",
   "private": true,
-  "description": "Travel guide generator with cache/history on Neon PostgreSQL.",
+  "description": "逍遥游 — AI 驱动的智能旅行攻略生成器",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "test": "node --test test/*.test.js"
   },
   "engines": {
     "node": ">=18"
